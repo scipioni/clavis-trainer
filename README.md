@@ -41,11 +41,13 @@ bun run check        # type checking (svelte-check)
 The keyboard model is generated from the ZMK keymap in
 [scipioni/clavis](https://github.com/scipioni/clavis)
 (`firmware/zmk-timeless/config/custom_config.h`, macros
-`MIRYOKU_LAYER_BASE/NUM/SYM`). After a firmware change:
+`MIRYOKU_LAYER_BASE/NUM/SYM`). The local checkout of that repository is
+`/lab/clavis`, next to this one, so a firmware change can be tried here before
+it is pushed. After a firmware change:
 
 ```sh
 bun run gen:keymap                          # download from GitHub (main branch)
-bun run gen:keymap ../clavis/firmware/zmk-timeless/config/custom_config.h   # from a local copy
+bun run gen:keymap /lab/clavis/firmware/zmk-timeless/config/custom_config.h   # from the local checkout
 ```
 
 The script rewrites `src/core/keyboard/clavis.keymap.json`. Also update the test
