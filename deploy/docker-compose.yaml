@@ -1,0 +1,26 @@
+# Produzione su cubo, dietro il Traefik dello stack passbolt (rete passbolt_default).
+# Formato 3.3 perché su cubo c'è docker-compose 1.25.
+version: "3.3"
+
+services:
+  clavis-trainer:
+    image: scipioit/clavis-trainer:${CLAVIS_TAG:-latest}
+    restart: unless-stopped
+    networks:
+      - default
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.clavis-http.entrypoints: "web"
+      traefik.http.routers.clavis-http.rule: "Host(`clavis.mywire.org`)"
+      traefik.http.routers.clavis-http.middlewares: "SslHeader@file"
+      traefik.http.routers.clavis-https.middlewares: "SslHeader@file"
+      traefik.http.routers.clavis-https.entrypoints: "websecure"
+      traefik.http.routers.clavis-https.rule: "Host(`clavis.mywire.org`)"
+      traefik.http.routers.clavis-https.tls: "true"
+      traefik.http.routers.clavis-https.tls.certresolver: "letsencrypt"
+      traefik.http.services.clavis.loadbalancer.server.port: "80"
+
+networks:
+  default:
+    external:
+      name: passbolt_default

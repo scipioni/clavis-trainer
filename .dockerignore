@@ -1,0 +1,12 @@
+node_modules
+dist
+.corpus-raw
+.git
+.github
+.agents
+.claude
+openspec
+deploy
+tests/e2e
+HANDOFF.md
+*.local

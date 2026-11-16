@@ -36,8 +36,8 @@ class AppState {
     try {
       const [store, words, sentences] = await Promise.all([
         TrainerStore.open(),
-        fetch('./corpus/words.json').then((r) => r.json()),
-        fetch('./corpus/sentences.json').then((r) => r.json()),
+        fetch(`./corpus/words.json?v=${__CORPUS_VERSION__}`).then((r) => r.json()),
+        fetch(`./corpus/sentences.json?v=${__CORPUS_VERSION__}`).then((r) => r.json()),
       ]);
       this.store = store;
       this.corpus = { words: words.words, sentences: sentences.sentences };

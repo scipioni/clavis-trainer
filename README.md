@@ -77,3 +77,47 @@ bun tests/e2e/smoke.ts            # CHROMIUM=/path/to/chromium for another brows
 
 It does not replace testing with a real clavis: dead key composition and home
 row mods depend on the operating system and the firmware.
+
+## Produzione
+
+L'app gira su `cubo` all'indirizzo <https://clavis.mywire.org>, dietro il
+Traefik dello stack passbolt (rete `passbolt_default`, certificato Let's
+Encrypt). L'immagine è pubblica su Docker Hub: `scipioit/clavis-trainer`.
+
+**Come arriva un rilascio**
+
+1. Push su `main` che tocca l'applicativo (`src/`, `public/`, dipendenze,
+   `Dockerfile`, `docker/`): il workflow `.github/workflows/release.yml`
+   costruisce l'immagine (i test unitari girano dentro la build) e la pubblica
+   come `sha-<commit>` e `latest`. Modifiche solo a documentazione, specifiche
+   o test non producono rilasci.
+2. Su cubo, `~/clavis-trainer/update.sh` gira in crontab ogni 5 minuti: se
+   `latest` è cambiata ricrea il container e scrive una riga in
+   `~/clavis-trainer/update.log`.
+
+I rilasci sono piccoli. Base nginx (circa 13 MB) e corpus sono layer
+riproducibili, perché il Dockerfile azzera gli mtime: tra due versioni cambia
+solo il layer dell'app, circa 100 kB. Per lo stesso motivo nginx non usa ETag
+né Last-Modified: `index.html` non va in cache, gli asset con hash e il corpus
+(`?v=<hash del contenuto>`) sono immutabili.
+
+Il workflow ha bisogno dei secret `DOCKERHUB_USERNAME` e `DOCKERHUB_TOKEN`
+(access token di Docker Hub con permesso Read & Write):
+
+```sh
+gh secret set DOCKERHUB_USERNAME --body scipioit
+gh secret set DOCKERHUB_TOKEN    # incolla il token quando richiesto
+```
+
+Senza i secret il workflow salta il rilascio con un avviso.
+
+**Comandi** ([Task](https://taskfile.dev))
+
+```sh
+task docker:run        # immagine locale su http://localhost:8088
+task e2e               # smoke test contro l'immagine locale
+task docker:publish    # rilascio manuale da qui (albero pulito)
+task deploy:install    # prima installazione su cubo: compose, script, cron
+task deploy:now        # aggiorna subito senza aspettare il cron
+task deploy:rollback -- sha-abc1234   # fissa una versione (scrive CLAVIS_TAG in .env)
+```

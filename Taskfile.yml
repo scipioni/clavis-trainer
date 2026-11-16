@@ -1,0 +1,58 @@
+version: '3'
+
+vars:
+  IMAGE: scipioit/clavis-trainer
+  HOST: scipio@cubo.local
+  REMOTE_DIR: clavis-trainer
+  SHA:
+    sh: git rev-parse --short=7 HEAD
+
+tasks:
+  docker:build:
+    desc: Costruisce l'immagine locale (esegue anche i test unitari)
+    cmds:
+      - docker build --build-arg VERSION=sha-{{.SHA}} -t {{.IMAGE}}:sha-{{.SHA}} -t {{.IMAGE}}:latest .
+
+  docker:run:
+    desc: Avvia l'immagine locale su http://localhost:8088
+    deps: [docker:build]
+    cmds:
+      - docker rm -f clavis-trainer-local 2>/dev/null || true
+      - docker run -d --name clavis-trainer-local -p 8088:80 {{.IMAGE}}:latest
+
+  e2e:
+    desc: Smoke test dell'interfaccia contro l'immagine locale (porta 8088)
+    deps: [docker:run]
+    cmds:
+      - bun tests/e2e/smoke.ts http://localhost:8088/
+
+  docker:publish:
+    desc: Rilascio manuale su Docker Hub (sha-<commit> e latest); di norma lo fa la CI
+    preconditions:
+      - sh: git diff --quiet && git diff --cached --quiet
+        msg: Ci sono modifiche non committate, il tag sha-{{.SHA}} non corrisponderebbe al codice
+    deps: [docker:build]
+    cmds:
+      - docker push {{.IMAGE}}:sha-{{.SHA}}
+      - docker push {{.IMAGE}}:latest
+
+  deploy:install:
+    desc: Copia compose e script su cubo, installa il cron di aggiornamento e avvia
+    cmds:
+      - ssh {{.HOST}} 'mkdir -p ~/{{.REMOTE_DIR}}'
+      - scp deploy/docker-compose.yaml deploy/update.sh {{.HOST}}:{{.REMOTE_DIR}}/
+      - ssh {{.HOST}} 'chmod +x ~/{{.REMOTE_DIR}}/update.sh'
+      - >-
+        ssh {{.HOST}} '(crontab -l 2>/dev/null | grep -v "{{.REMOTE_DIR}}/update.sh";
+        echo "*/5 * * * * $HOME/{{.REMOTE_DIR}}/update.sh >> $HOME/{{.REMOTE_DIR}}/update.log 2>&1") | crontab -'
+      - ssh {{.HOST}} '~/{{.REMOTE_DIR}}/update.sh'
+
+  deploy:now:
+    desc: Forza subito l'aggiornamento su cubo senza aspettare il cron
+    cmds:
+      - ssh {{.HOST}} '~/{{.REMOTE_DIR}}/update.sh && tail -3 ~/{{.REMOTE_DIR}}/update.log 2>/dev/null; true'
+
+  deploy:rollback:
+    desc: 'Torna a una versione precedente: task deploy:rollback -- sha-abc1234 (rimuovere CLAVIS_TAG da .env per tornare a latest)'
+    cmds:
+      - ssh {{.HOST}} 'cd ~/{{.REMOTE_DIR}} && echo "CLAVIS_TAG={{.CLI_ARGS}}" > .env && ./update.sh'

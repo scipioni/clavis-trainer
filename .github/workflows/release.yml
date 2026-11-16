@@ -1,0 +1,75 @@
+# Rilascio automatico: a ogni push su main che tocca l'applicativo si costruisce
+# l'immagine e la si pubblica su Docker Hub (scipioit/clavis-trainer). Su cubo
+# deploy/update.sh la scarica entro 5 minuti. Modifiche solo a documentazione,
+# specifiche o test non producono rilasci.
+#
+# Secret richiesti: DOCKERHUB_USERNAME, DOCKERHUB_TOKEN (access token Docker Hub
+# con permesso Read & Write).
+name: release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'index.html'
+      - 'package.json'
+      - 'bun.lock'
+      - 'vite.config.ts'
+      - 'svelte.config.js'
+      - 'tsconfig.json'
+      - 'Dockerfile'
+      - '.dockerignore'
+      - 'docker/**'
+      - '.github/workflows/release.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: release
+  cancel-in-progress: true
+
+env:
+  IMAGE: scipioit/clavis-trainer
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    env:
+      HAS_TOKEN: ${{ secrets.DOCKERHUB_TOKEN != '' }}
+    steps:
+      - if: env.HAS_TOKEN != 'true'
+        run: echo "::warning::Secret DOCKERHUB_TOKEN mancante, rilascio saltato (vedi README, sezione Produzione)"
+
+      - if: env.HAS_TOKEN == 'true'
+        uses: actions/checkout@v4
+
+      - if: env.HAS_TOKEN == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - if: env.HAS_TOKEN == 'true'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - if: env.HAS_TOKEN == 'true'
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=latest
+
+      # i test unitari girano dentro la build (Dockerfile): se falliscono non si pubblica
+      - if: env.HAS_TOKEN == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: VERSION=${{ steps.meta.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
