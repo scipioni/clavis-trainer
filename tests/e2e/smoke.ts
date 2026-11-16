@@ -15,7 +15,7 @@ page.setDefaultTimeout(8000);
 const external: string[] = [];
 page.on('request', (r) => {
   const u = new globalThis.URL(r.url());
-  if (!['localhost', '127.0.0.1'].includes(u.hostname) && u.protocol.startsWith('http')) external.push(r.url());
+  if (u.host !== new globalThis.URL(URL).host && u.protocol.startsWith('http')) external.push(r.url());
 });
 const errors: string[] = [];
 page.on('pageerror', (e) => errors.push(e.message));
