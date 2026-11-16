@@ -5,6 +5,8 @@
   import Stats from './Stats.svelte';
   import Settings from './Settings.svelte';
   import About from './About.svelte';
+  import AccountBadge from './AccountBadge.svelte';
+  import LoginDialog from './LoginDialog.svelte';
 
   const TABS: { id: View; label: string }[] = [
     { id: 'train', label: 'Allenamento' },
@@ -27,7 +29,10 @@
       <button class:active={app.view === t.id} onclick={() => (app.view = t.id)}>{t.label}</button>
     {/each}
   </nav>
+  {#if app.ready}<div class="account"><AccountBadge /></div>{/if}
 </header>
+
+{#if app.loginOpen}<LoginDialog />{/if}
 
 <main>
   {#if app.error}
@@ -153,6 +158,9 @@
   h1 span {
     color: var(--accent);
     margin-left: 0.2rem;
+  }
+  .account {
+    margin-left: auto;
   }
   nav {
     display: flex;

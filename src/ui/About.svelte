@@ -8,7 +8,9 @@
     Trainer di digitazione per la tastiera split
     <a href="https://github.com/scipioni/clavis" target="_blank" rel="noreferrer">clavis</a>
     (36 tasti, Miryoku Colemak-DH con home row mods), con il sistema in US International a tasti morti.
-    Tutto resta in questo browser: nessun dato viene inviato altrove.
+    Senza accesso tutto resta in questo browser. Con l'accesso Telegram (facoltativo) sessioni e impostazioni
+    vengono salvate anche sul server di clavis-trainer, per averle su ogni dispositivo; di Telegram si conservano
+    solo id, nome e username.
   </p>
 
   <h3>Come funziona</h3>

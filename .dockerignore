@@ -10,3 +10,4 @@ deploy
 tests/e2e
 HANDOFF.md
 *.local
+data

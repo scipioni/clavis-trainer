@@ -3,8 +3,9 @@
 A typing trainer for the [clavis](https://github.com/scipioni/clavis) split
 keyboard (36 keys, Miryoku Colemak-DH with home row mods), used with the
 system layout set to US International with dead keys. Adaptive drills that
-target your weak spots, real Italian text, and statistics over time. Everything
-runs in the browser with no server: your data stays in IndexedDB.
+target your weak spots, real Italian text, and statistics over time. Training
+runs entirely in the browser (IndexedDB); signing in with Telegram is optional
+and makes your history follow you across devices.
 
 ![Training session: the on-screen keyboard switches to the NUM layer to show how to type the apostrophe](docs/screenshot.png)
 
@@ -21,7 +22,12 @@ runs in the browser with no server: your data stays in IndexedDB.
   mod rolls are counted separately.
 - **Statistics**: WPM and accuracy trends, a per-layer heat map, and rankings of
   weak units with a "train this" button.
-- **Local data**: export, import and reset from the settings page.
+- **Local first**: everything works offline and without an account; export,
+  import and reset from the settings page.
+- **Telegram sign-in and sync** (optional): the site shows a code, the bot shows
+  the same code with a Confirm button. Completed sessions and settings are then
+  synced between your devices; history recorded before signing in is merged
+  into the account.
 
 The interface is in Italian.
 
@@ -32,9 +38,17 @@ bun install          # dependencies
 bun run dev          # development server on http://localhost:5173
 bun run build        # static build in dist/
 bun run preview      # serve dist/
-bun run test         # unit tests (Vitest)
-bun run check        # type checking (svelte-check)
+bun run server       # API and bot on :8080 (Vite proxies /api to it)
+bun run test         # client unit tests (Vitest)
+bun run test:server  # server tests (bun test)
+bun run check        # type checking (svelte-check + tsc for server/)
 ```
+
+The server (`server/`) is a single Bun process: static files, the JSON API under
+`/api/` and the Telegram login bot (long polling), with SQLite (`bun:sqlite`)
+in `DATA_DIR`. Without `TELEGRAM_BOT_TOKEN` the sign-in button is hidden and
+the app behaves as a purely local one. See the header of `server/main.ts` for
+all environment variables.
 
 ## clavis keymap
 
@@ -77,49 +91,83 @@ bun run build && bun run preview --port 4173 &
 bun tests/e2e/smoke.ts            # CHROMIUM=/path/to/chromium for another browser
 ```
 
-It does not replace testing with a real clavis: dead key composition and home
+`tests/e2e/account.ts` covers sign-in and sync with a fake bot
+(`TELEGRAM_FAKE=1`), using three browser contexts as three devices: confirm and
+deny in the bot, a session made on one device appearing on another, settings
+following the account, anonymous history merged on sign-in, sign-out.
+
+```sh
+task server:e2e &                 # server with the fake bot on :8099
+bun tests/e2e/account.ts http://localhost:8099/
+task e2e                          # both suites against the local Docker image
+```
+
+They do not replace testing with a real clavis: dead key composition and home
 row mods depend on the operating system and the firmware.
 
-## Produzione
+## Production
 
-L'app gira su `cubo` all'indirizzo <https://clavis.mywire.org>, dietro il
-Traefik dello stack passbolt (rete `passbolt_default`, certificato Let's
-Encrypt). L'immagine è pubblica su Docker Hub: `scipioit/clavis-trainer`.
+The app runs on `cubo` at <https://clavis.mywire.org>, behind the Traefik of
+the passbolt stack (network `passbolt_default`, Let's Encrypt certificate). The
+image is public on Docker Hub: `scipioit/clavis-trainer`.
 
-**Come arriva un rilascio**
+**How a release ships**
 
-1. Push su `main` che tocca l'applicativo (`src/`, `public/`, dipendenze,
-   `Dockerfile`, `docker/`): il workflow `.github/workflows/release.yml`
-   costruisce l'immagine (i test unitari girano dentro la build) e la pubblica
-   come `sha-<commit>` e `latest`. Modifiche solo a documentazione, specifiche
-   o test non producono rilasci.
-2. Su cubo, `~/clavis-trainer/update.sh` gira in crontab ogni 5 minuti: se
-   `latest` è cambiata ricrea il container e scrive una riga in
-   `~/clavis-trainer/update.log`.
+1. A push to `main` that touches the application (`src/`, `server/`,
+   `public/`, dependencies, `Dockerfile`) runs `.github/workflows/release.yml`:
+   it builds the image (client and server tests run inside the build) and
+   publishes it as `sha-<commit>` and `latest`. Changes to docs, specs or tests
+   only do not produce a release.
+2. On cubo, `~/clavis-trainer/update.sh` runs from crontab every 5 minutes. It
+   recreates the container when the image or the configuration (`.env`)
+   changed, and logs one line to `~/clavis-trainer/update.log`.
 
-I rilasci sono piccoli. Base nginx (circa 13 MB) e corpus sono layer
-riproducibili, perché il Dockerfile azzera gli mtime: tra due versioni cambia
-solo il layer dell'app, circa 100 kB. Per lo stesso motivo nginx non usa ETag
-né Last-Modified: `index.html` non va in cache, gli asset con hash e il corpus
-(`?v=<hash del contenuto>`) sono immutabili.
+Releases are small. The Bun base image is downloaded once; corpus, site and
+server are reproducible layers (the Dockerfile zeroes all mtimes), so a release
+only ships the layers that changed: typically the site (about 160 kB) and the
+server bundle (about 30 kB). Static files are pre-compressed with `gzip -n`;
+`index.html` is never cached, hashed assets and the corpus
+(`?v=<content hash>`) are immutable.
 
-Il workflow ha bisogno dei secret `DOCKERHUB_USERNAME` e `DOCKERHUB_TOKEN`
-(access token di Docker Hub con permesso Read & Write):
+The workflow needs the `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` secrets (a
+Docker Hub access token with Read & Write):
 
 ```sh
 gh secret set DOCKERHUB_USERNAME --body scipioit
-gh secret set DOCKERHUB_TOKEN    # incolla il token quando richiesto
+gh secret set DOCKERHUB_TOKEN    # paste the token when asked
 ```
 
-Senza i secret il workflow salta il rilascio con un avviso.
+Without them the workflow skips the release with a warning.
 
-**Comandi** ([Task](https://taskfile.dev))
+**Telegram bot**
+
+Create a bot with [@BotFather](https://t.me/BotFather) (`/newbot`) and put its
+token in `~/clavis-trainer/.env` on cubo:
 
 ```sh
-task docker:run        # immagine locale su http://localhost:8088
-task e2e               # smoke test contro l'immagine locale
-task docker:publish    # rilascio manuale da qui (albero pulito)
-task deploy:install    # prima installazione su cubo: compose, script, cron
-task deploy:now        # aggiorna subito senza aspettare il cron
-task deploy:rollback -- sha-abc1234   # fissa una versione (scrive CLAVIS_TAG in .env)
+ssh scipio@cubo.local 'echo "TELEGRAM_BOT_TOKEN=123456:ABC..." >> ~/clavis-trainer/.env'
+```
+
+Within 5 minutes the cron recreates the container and the sign-in button
+appears. The server sets the bot's name, descriptions and `/start` command by
+itself. No `/setdomain` is needed: sign-in uses a `t.me/<bot>?start=<id>` deep
+link plus a code that the user confirms in the bot.
+
+**Data and backups**
+
+Accounts and history live in `~/clavis-trainer/data/clavis.db` (SQLite, WAL)
+on cubo. Include that directory in cubo's backups; for a consistent copy while
+the app runs use `sqlite3 data/clavis.db ".backup /path/clavis.db"`.
+
+**Commands** ([Task](https://taskfile.dev))
+
+```sh
+task docker:run        # local image on http://localhost:8088 (fake bot)
+task e2e               # smoke + account tests against the local image
+task docker:publish    # manual release from here (clean tree only)
+task deploy:install    # first install on cubo: compose, script, cron
+task deploy:files      # push new compose/update.sh to cubo (keeps .env and data/)
+task deploy:now        # update now instead of waiting for cron
+task deploy:rollback -- sha-abc1234   # pin a version (CLAVIS_TAG in .env)
+task deploy:latest     # follow latest again
 ```

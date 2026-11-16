@@ -129,7 +129,7 @@
     result = record.result;
     await app.store.completeSession(record, app.resolver);
     app.focus = null;
-    await app.refresh();
+    await app.afterSession(); // aggiorna e, con l'accesso, invia la sessione all'account
   }
 
   async function abort() {

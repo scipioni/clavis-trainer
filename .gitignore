@@ -3,4 +3,5 @@ dist/
 .corpus-raw/
 *.local
 tests/e2e/out/
-tests/e2e/last.log
+tests/e2e/*.log
+data/

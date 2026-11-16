@@ -18,13 +18,15 @@ tasks:
     deps: [docker:build]
     cmds:
       - docker rm -f clavis-trainer-local 2>/dev/null || true
-      - docker run -d --name clavis-trainer-local -p 8088:80 {{.IMAGE}}:latest
+      - docker run -d --name clavis-trainer-local -p 8088:8080 -e TELEGRAM_FAKE=1 -e COOKIE_SECURE=0 -e PUBLIC_URL=http://localhost:8088 {{.IMAGE}}:latest
 
   e2e:
-    desc: Smoke test dell'interfaccia contro l'immagine locale (porta 8088)
+    desc: Smoke test e test dell'account (bot finto) contro l'immagine locale (porta 8088)
     deps: [docker:run]
     cmds:
+      - sleep 2
       - bun tests/e2e/smoke.ts http://localhost:8088/
+      - bun tests/e2e/account.ts http://localhost:8088/
 
   docker:publish:
     desc: Rilascio manuale su Docker Hub (sha-<commit> e latest); di norma lo fa la CI
@@ -53,6 +55,24 @@ tasks:
       - ssh {{.HOST}} '~/{{.REMOTE_DIR}}/update.sh && tail -3 ~/{{.REMOTE_DIR}}/update.log 2>/dev/null; true'
 
   deploy:rollback:
-    desc: 'Torna a una versione precedente: task deploy:rollback -- sha-abc1234 (rimuovere CLAVIS_TAG da .env per tornare a latest)'
+    desc: 'Fissa una versione: task deploy:rollback -- sha-abc1234 (poi task deploy:latest per tornare a latest)'
     cmds:
-      - ssh {{.HOST}} 'cd ~/{{.REMOTE_DIR}} && echo "CLAVIS_TAG={{.CLI_ARGS}}" > .env && ./update.sh'
+      - ssh {{.HOST}} 'cd ~/{{.REMOTE_DIR}} && touch .env && sed -i "/^CLAVIS_TAG=/d" .env && echo "CLAVIS_TAG={{.CLI_ARGS}}" >> .env && ./update.sh'
+
+  deploy:latest:
+    desc: Torna a seguire latest dopo un rollback
+    cmds:
+      - ssh {{.HOST}} 'cd ~/{{.REMOTE_DIR}} && touch .env && sed -i "/^CLAVIS_TAG=/d" .env && ./update.sh'
+
+  deploy:files:
+    desc: Aggiorna compose e update.sh su cubo (senza toccare .env e data/) e applica
+    cmds:
+      - scp deploy/docker-compose.yaml deploy/update.sh {{.HOST}}:{{.REMOTE_DIR}}/
+      - ssh {{.HOST}} 'chmod +x ~/{{.REMOTE_DIR}}/update.sh && ~/{{.REMOTE_DIR}}/update.sh'
+
+  server:e2e:
+    desc: Server locale col bot finto sulla porta 8099 (per tests/e2e/account.ts)
+    deps: []
+    cmds:
+      - bun run build
+      - TELEGRAM_FAKE=1 COOKIE_SECURE=0 PORT=8099 PUBLIC_URL=http://localhost:8099 DATA_DIR=$(mktemp -d) STATIC_DIR=./dist bun server/main.ts

@@ -14,6 +14,8 @@ function corpusVersion(): string {
 export default defineConfig({
   base: './',
   plugins: [svelte()],
+  // in sviluppo l'API gira a parte: bun run server (porta 8080)
+  server: { proxy: { '/api': 'http://localhost:8080' } },
   define: {
     __CORPUS_VERSION__: JSON.stringify(corpusVersion()),
   },

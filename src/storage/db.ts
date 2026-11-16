@@ -1,56 +1,17 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type { Resolver } from '../core/keyboard/resolver';
-import type { Sample } from '../core/session/session';
-import type { SessionResult } from '../core/session/result';
 import { applySamples, recompute, type StatsTable } from '../core/analysis/stats';
+import {
+  DEFAULT_SETTINGS,
+  EXPORT_FORMAT,
+  EXPORT_VERSION,
+  type ExportData,
+  type Settings,
+  type StoredSession,
+} from '../core/data';
 
-export type ExerciseMode = 'adaptive' | 'sentences' | 'free';
-
-export interface StoredSession {
-  id: string;
-  /** Data di inizio (epoch ms). */
-  startedAt: number;
-  mode: ExerciseMode;
-  /** Durata scelta in ms, null = fino alla fine del testo. */
-  durationMs: number | null;
-  status: 'in-progress' | 'completed';
-  focus?: string;
-  deadKeys: boolean;
-  samples: Sample[];
-  result: SessionResult;
-}
-
-export interface Settings {
-  mode: ExerciseMode;
-  /** Secondi; null = fino alla fine del testo. */
-  durationSec: number | null;
-  deadKeys: boolean;
-  showKeyboard: boolean;
-  capitals: number;
-  punctuation: number;
-  digits: number;
-}
-
-export const DEFAULT_SETTINGS: Settings = {
-  mode: 'adaptive',
-  durationSec: 60,
-  deadKeys: true,
-  showKeyboard: true,
-  capitals: 0.1,
-  punctuation: 0.15,
-  digits: 0.03,
-};
-
-export const EXPORT_FORMAT = 'clavis-trainer';
-export const EXPORT_VERSION = 1;
-
-export interface ExportData {
-  format: typeof EXPORT_FORMAT;
-  version: typeof EXPORT_VERSION;
-  exportedAt: string;
-  sessions: StoredSession[];
-  settings: Settings;
-}
+// compatibilità: tipi e validazione stanno in core/data.ts, condiviso col server
+export * from '../core/data';
 
 interface TrainerDB extends DBSchema {
   sessions: { key: string; value: StoredSession; indexes: { startedAt: number } };
@@ -59,6 +20,24 @@ interface TrainerDB extends DBSchema {
 
 const STATS_KEY = 'stats';
 const SETTINGS_KEY = 'settings';
+const SYNC_KEY = 'sync';
+
+/** Stato della sincronizzazione con l'account, in kv. */
+export interface SyncMeta {
+  /** Id Telegram dell'account a cui sono legati i dati locali; null = anonimi. */
+  account: number | null;
+  /** Ultimo `seq` del server già scaricato. */
+  cursor: number;
+  /** Sessioni completate non ancora confermate dal server (anche da anonimi: salgono al primo accesso). */
+  pending: string[];
+  /** Ultima modifica locale delle impostazioni (epoch ms). */
+  settingsUpdatedAt: number;
+  /** Versione delle impostazioni già allineata col server. */
+  settingsSynced: number;
+  lastSync: number | null;
+}
+
+export const EMPTY_SYNC: SyncMeta = { account: null, cursor: 0, pending: [], settingsUpdatedAt: 0, settingsSynced: 0, lastSync: null };
 
 export class TrainerStore {
   private constructor(private readonly db: IDBPDatabase<TrainerDB>) {}
@@ -93,7 +72,55 @@ export class TrainerStore {
     const kv = tx.objectStore('kv');
     const table = ((await kv.get(STATS_KEY)) as StatsTable | undefined) ?? {};
     applySamples(table, s.samples, resolver);
-    await Promise.all([tx.objectStore('sessions').put({ ...s, status: 'completed' }), kv.put(table, STATS_KEY), tx.done]);
+    const meta = { ...EMPTY_SYNC, ...((await kv.get(SYNC_KEY)) as Partial<SyncMeta> | undefined) };
+    if (!meta.pending.includes(s.id)) meta.pending = [...meta.pending, s.id];
+    await Promise.all([
+      tx.objectStore('sessions').put({ ...s, status: 'completed' }),
+      kv.put(table, STATS_KEY),
+      kv.put(meta, SYNC_KEY),
+      tx.done,
+    ]);
+    return table;
+  }
+
+  async getSync(): Promise<SyncMeta> {
+    return { ...EMPTY_SYNC, ...((await this.db.get('kv', SYNC_KEY)) as Partial<SyncMeta> | undefined) };
+  }
+
+  async patchSync(patch: Partial<SyncMeta>): Promise<SyncMeta> {
+    const tx = this.db.transaction('kv', 'readwrite');
+    const next = { ...EMPTY_SYNC, ...((await tx.store.get(SYNC_KEY)) as Partial<SyncMeta> | undefined), ...patch };
+    await Promise.all([tx.store.put(next, SYNC_KEY), tx.done]);
+    return next;
+  }
+
+  async getSessions(ids: string[]): Promise<StoredSession[]> {
+    const out: StoredSession[] = [];
+    for (const id of ids) {
+      const s = await this.db.get('sessions', id);
+      if (s?.status === 'completed') out.push(s);
+    }
+    return out;
+  }
+
+  /** Aggiunge le sessioni scaricate che mancano; restituisce quante sono nuove. */
+  async addSessions(sessions: StoredSession[]): Promise<number> {
+    const tx = this.db.transaction('sessions', 'readwrite');
+    let added = 0;
+    for (const s of sessions) {
+      const cur = await tx.store.get(s.id);
+      if (cur?.status === 'completed') continue;
+      await tx.store.put({ ...s, status: 'completed' });
+      added++;
+    }
+    await tx.done;
+    return added;
+  }
+
+  /** Ricalcola le statistiche da tutto lo storico in ordine cronologico. */
+  async recomputeStats(resolver: Resolver): Promise<StatsTable> {
+    const table = recompute(await this.listSessions(), resolver);
+    await this.db.put('kv', table, STATS_KEY);
     return table;
   }
 
@@ -115,8 +142,10 @@ export class TrainerStore {
     return { ...DEFAULT_SETTINGS, ...s };
   }
 
-  async saveSettings(s: Settings): Promise<void> {
+  /** Salva le impostazioni; `updatedAt` serve a far vincere l'ultima modifica tra dispositivi. */
+  async saveSettings(s: Settings, updatedAt: number | null = Date.now()): Promise<void> {
     await this.db.put('kv', s, SETTINGS_KEY);
+    if (updatedAt !== null) await this.patchSync({ settingsUpdatedAt: updatedAt });
   }
 
   async exportData(): Promise<ExportData> {
@@ -139,11 +168,15 @@ export class TrainerStore {
     const tx = this.db.transaction(['sessions', 'kv'], 'readwrite');
     const store = tx.objectStore('sessions');
     const kv = tx.objectStore('kv');
+    const prev = { ...EMPTY_SYNC, ...((await kv.get(SYNC_KEY)) as Partial<SyncMeta> | undefined) };
     await store.clear();
     await kv.clear();
     for (const s of sessions) await store.put(s);
     await kv.put(table, STATS_KEY);
     await kv.put({ ...DEFAULT_SETTINGS, ...data.settings }, SETTINGS_KEY);
+    // lo storico importato è tutto da inviare; l'account resta quello del browser
+    const meta: SyncMeta = { ...EMPTY_SYNC, account: prev.account, pending: sessions.map((s) => s.id), settingsUpdatedAt: Date.now() };
+    await kv.put(meta, SYNC_KEY);
     await tx.done;
   }
 
@@ -151,54 +184,4 @@ export class TrainerStore {
     const tx = this.db.transaction(['sessions', 'kv'], 'readwrite');
     await Promise.all([tx.objectStore('sessions').clear(), tx.objectStore('kv').clear(), tx.done]);
   }
-}
-
-export class ImportError extends Error {}
-
-const isNum = (x: unknown) => typeof x === 'number' && Number.isFinite(x);
-
-function validSample(x: unknown): x is Sample {
-  const s = x as Sample;
-  return (
-    typeof s === 'object' && s !== null &&
-    typeof s.char === 'string' &&
-    (s.prev === null || typeof s.prev === 'string') &&
-    (s.ms === null || isNum(s.ms)) &&
-    isNum(s.errors) && isNum(s.modMisfires) && isNum(s.deadErrors) &&
-    Array.isArray(s.wrong)
-  );
-}
-
-function validSession(x: unknown): x is StoredSession {
-  const s = x as StoredSession;
-  return (
-    typeof s === 'object' && s !== null &&
-    typeof s.id === 'string' && isNum(s.startedAt) &&
-    ['adaptive', 'sentences', 'free'].includes(s.mode) &&
-    s.status === 'completed' &&
-    Array.isArray(s.samples) && s.samples.every(validSample) &&
-    typeof s.result === 'object' && s.result !== null && isNum(s.result.wpm)
-  );
-}
-
-/** Valida il contenuto di un file di esportazione; lancia ImportError se non è valido. */
-export function parseExport(text: string): ExportData {
-  let data: unknown;
-  try {
-    data = JSON.parse(text);
-  } catch {
-    throw new ImportError('il file non è JSON valido');
-  }
-  const d = data as ExportData;
-  if (typeof d !== 'object' || d === null || d.format !== EXPORT_FORMAT) {
-    throw new ImportError('non è un file di esportazione di clavis-trainer');
-  }
-  if (d.version !== EXPORT_VERSION) throw new ImportError(`versione ${String(d.version)} non supportata`);
-  if (!Array.isArray(d.sessions)) throw new ImportError('elenco delle sessioni mancante');
-  const bad = d.sessions.findIndex((s) => !validSession(s));
-  if (bad >= 0) throw new ImportError(`sessione ${bad + 1} non valida`);
-  if (d.settings !== undefined && (typeof d.settings !== 'object' || d.settings === null)) {
-    throw new ImportError('impostazioni non valide');
-  }
-  return { ...d, settings: { ...DEFAULT_SETTINGS, ...d.settings } };
 }

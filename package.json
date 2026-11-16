@@ -8,9 +8,11 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "check": "svelte-check --tsconfig ./tsconfig.json && tsc -p server",
     "gen:keymap": "bun scripts/gen-keymap.ts",
-    "build:corpus": "bun scripts/build-corpus.ts"
+    "build:corpus": "bun scripts/build-corpus.ts",
+    "test:server": "bun test server",
+    "server": "COOKIE_SECURE=0 STATIC_DIR= bun --watch server/main.ts"
   },
   "dependencies": {
     "idb": "^8.0.4"
@@ -18,6 +20,7 @@
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
     "@tsconfig/svelte": "^5.0.9",
+    "@types/bun": "^1.4.4",
     "@types/node": "^26.6.6",
     "fake-indexeddb": "^6.2.8",
     "playwright-core": "^1.65.1",
