@@ -2,3 +2,5 @@ node_modules/
 dist/
 .corpus-raw/
 *.local
+tests/e2e/out/
+tests/e2e/last.log

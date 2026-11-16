@@ -129,9 +129,17 @@ ignorata da git.
 ### 7. Generazione adattiva
 
 Indice inverso unità → parole costruito in avvio. Per ogni parola: con
-probabilità 0,7 si estrae un'unità debole (pesata sul punteggio, con un
-piccolo peso anche alle "poco esplorate", per esplorare) e una parola che la
-contiene, pesata per frequenza; altrimenti si estrae una parola per frequenza.
+probabilità 0,7 si estrae un'unità debole e una parola che la contiene, pesata
+per radice della frequenza; altrimenti si estrae una parola per radice della
+frequenza (la frequenza pura darebbe solo "e non che di").
+
+Il peso di un punto debole è l'eccesso del punteggio sulla media
+(`score − 1`, minimo 0,05), tra le prime 12 unità: con il punteggio pieno le
+unità nella media (≈ 1) diluiscono quella davvero debole. Le unità poco
+esplorate ricevono insieme il 20% del peso totale, diviso tra loro, perché con
+dati reali sono centinaia. Per le transizioni verso il NUM, con le cifre
+attive, metà delle volte si inserisce un numero e metà si sceglie una parola
+con accenti.
 Maiuscole, punteggiatura (`, . ; : ? ! ( ) ' "`) e cifre si inseriscono dopo,
 con le proporzioni scelte dall'utente, e si orientano verso i caratteri e le
 transizioni deboli di quei tipi. L'allenamento mirato su un'unità forza la

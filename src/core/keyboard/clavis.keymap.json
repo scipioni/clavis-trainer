@@ -1,0 +1,528 @@
+{
+ "source": "scipioni/clavis firmware/zmk-timeless/config/custom_config.h",
+ "layers": {
+  "BASE": [
+   {
+    "tap": "q",
+    "shiftTap": "Q",
+    "label": "q"
+   },
+   {
+    "tap": "w",
+    "shiftTap": "W",
+    "label": "w"
+   },
+   {
+    "tap": "f",
+    "shiftTap": "F",
+    "label": "f"
+   },
+   {
+    "tap": "p",
+    "shiftTap": "P",
+    "label": "p"
+   },
+   {
+    "tap": "b",
+    "shiftTap": "B",
+    "label": "b"
+   },
+   {
+    "tap": "j",
+    "shiftTap": "J",
+    "label": "j"
+   },
+   {
+    "tap": "l",
+    "shiftTap": "L",
+    "label": "l"
+   },
+   {
+    "tap": "u",
+    "shiftTap": "U",
+    "label": "u"
+   },
+   {
+    "tap": "y",
+    "shiftTap": "Y",
+    "label": "y"
+   },
+   {
+    "tap": ";",
+    "shiftTap": ":",
+    "label": ";"
+   },
+   {
+    "tap": "a",
+    "shiftTap": "A",
+    "label": "a",
+    "holdMod": "gui"
+   },
+   {
+    "tap": "r",
+    "shiftTap": "R",
+    "label": "r",
+    "holdMod": "alt"
+   },
+   {
+    "tap": "s",
+    "shiftTap": "S",
+    "label": "s",
+    "holdMod": "ctrl"
+   },
+   {
+    "tap": "t",
+    "shiftTap": "T",
+    "label": "t",
+    "holdMod": "shift"
+   },
+   {
+    "tap": "g",
+    "shiftTap": "G",
+    "label": "g"
+   },
+   {
+    "tap": "m",
+    "shiftTap": "M",
+    "label": "m"
+   },
+   {
+    "tap": "n",
+    "shiftTap": "N",
+    "label": "n",
+    "holdMod": "shift"
+   },
+   {
+    "tap": "e",
+    "shiftTap": "E",
+    "label": "e",
+    "holdMod": "ctrl"
+   },
+   {
+    "tap": "i",
+    "shiftTap": "I",
+    "label": "i",
+    "holdMod": "alt"
+   },
+   {
+    "tap": "o",
+    "shiftTap": "O",
+    "label": "o",
+    "holdMod": "gui"
+   },
+   {
+    "tap": "z",
+    "shiftTap": "Z",
+    "label": "z",
+    "holdLayer": "BUTTON"
+   },
+   {
+    "tap": "x",
+    "shiftTap": "X",
+    "label": "x",
+    "holdMod": "alt"
+   },
+   {
+    "tap": "c",
+    "shiftTap": "C",
+    "label": "c"
+   },
+   {
+    "tap": "d",
+    "shiftTap": "D",
+    "label": "d"
+   },
+   {
+    "tap": "v",
+    "shiftTap": "V",
+    "label": "v"
+   },
+   {
+    "tap": "k",
+    "shiftTap": "K",
+    "label": "k"
+   },
+   {
+    "tap": "h",
+    "shiftTap": "H",
+    "label": "h"
+   },
+   {
+    "tap": ",",
+    "shiftTap": "<",
+    "label": ","
+   },
+   {
+    "tap": ".",
+    "shiftTap": ">",
+    "label": ".",
+    "holdMod": "alt"
+   },
+   {
+    "tap": "/",
+    "shiftTap": "?",
+    "label": "/",
+    "holdLayer": "BUTTON"
+   },
+   {
+    "label": "",
+    "absent": true
+   },
+   {
+    "label": "",
+    "absent": true
+   },
+   {
+    "label": "Esc",
+    "holdLayer": "MEDIA"
+   },
+   {
+    "tap": " ",
+    "label": "␣",
+    "holdLayer": "NAV"
+   },
+   {
+    "tap": "\t",
+    "label": "⇥",
+    "holdLayer": "MOUSE"
+   },
+   {
+    "tap": "\n",
+    "label": "⏎",
+    "holdLayer": "SYM"
+   },
+   {
+    "label": "⌫",
+    "holdLayer": "NUM"
+   },
+   {
+    "label": "⌦",
+    "holdLayer": "FUN"
+   },
+   {
+    "label": "",
+    "absent": true
+   },
+   {
+    "label": "",
+    "absent": true
+   }
+  ],
+  "NUM": [
+   {
+    "tap": "[",
+    "shiftTap": "{",
+    "label": "["
+   },
+   {
+    "tap": "7",
+    "shiftTap": "&",
+    "label": "7"
+   },
+   {
+    "tap": "8",
+    "shiftTap": "*",
+    "label": "8"
+   },
+   {
+    "tap": "9",
+    "shiftTap": "(",
+    "label": "9"
+   },
+   {
+    "tap": "]",
+    "shiftTap": "}",
+    "label": "]"
+   },
+   {
+    "label": ""
+   },
+   {
+    "label": ""
+   },
+   {
+    "label": ""
+   },
+   {
+    "label": ""
+   },
+   {
+    "label": ""
+   },
+   {
+    "tap": "'",
+    "shiftTap": "\"",
+    "label": "'"
+   },
+   {
+    "tap": "4",
+    "shiftTap": "$",
+    "label": "4"
+   },
+   {
+    "tap": "5",
+    "shiftTap": "%",
+    "label": "5"
+   },
+   {
+    "tap": "6",
+    "shiftTap": "^",
+    "label": "6"
+   },
+   {
+    "tap": "=",
+    "shiftTap": "+",
+    "label": "="
+   },
+   {
+    "label": ""
+   },
+   {
+    "holdMod": "shift",
+    "label": "⇧"
+   },
+   {
+    "holdMod": "ctrl",
+    "label": "ctrl"
+   },
+   {
+    "holdMod": "alt",
+    "label": "alt"
+   },
+   {
+    "holdMod": "gui",
+    "label": "gui"
+   },
+   {
+    "tap": "`",
+    "shiftTap": "~",
+    "label": "`"
+   },
+   {
+    "tap": "1",
+    "shiftTap": "!",
+    "label": "1"
+   },
+   {
+    "tap": "2",
+    "shiftTap": "@",
+    "label": "2"
+   },
+   {
+    "tap": "3",
+    "shiftTap": "#",
+    "label": "3"
+   },
+   {
+    "tap": "\\",
+    "shiftTap": "|",
+    "label": "\\"
+   },
+   {
+    "label": ""
+   },
+   {
+    "label": ""
+   },
+   {
+    "label": ""
+   },
+   {
+    "holdMod": "alt",
+    "label": "alt"
+   },
+   {
+    "label": ""
+   },
+   {
+    "label": "",
+    "absent": true
+   },
+   {
+    "label": "",
+    "absent": true
+   },
+   {
+    "tap": ".",
+    "shiftTap": ">",
+    "label": "."
+   },
+   {
+    "tap": "0",
+    "shiftTap": ")",
+    "label": "0"
+   },
+   {
+    "tap": "-",
+    "shiftTap": "_",
+    "label": "-"
+   },
+   {
+    "label": ""
+   },
+   {
+    "label": ""
+   },
+   {
+    "label": ""
+   },
+   {
+    "label": "",
+    "absent": true
+   },
+   {
+    "label": "",
+    "absent": true
+   }
+  ],
+  "SYM": [
+   {
+    "tap": "{",
+    "label": "{"
+   },
+   {
+    "tap": "&",
+    "label": "&"
+   },
+   {
+    "tap": "*",
+    "label": "*"
+   },
+   {
+    "tap": "(",
+    "label": "("
+   },
+   {
+    "tap": "}",
+    "label": "}"
+   },
+   {
+    "label": ""
+   },
+   {
+    "label": ""
+   },
+   {
+    "label": ""
+   },
+   {
+    "label": ""
+   },
+   {
+    "label": ""
+   },
+   {
+    "tap": ":",
+    "label": ":"
+   },
+   {
+    "tap": "$",
+    "label": "$"
+   },
+   {
+    "tap": "%",
+    "label": "%"
+   },
+   {
+    "tap": "^",
+    "label": "^"
+   },
+   {
+    "tap": "+",
+    "label": "+"
+   },
+   {
+    "label": ""
+   },
+   {
+    "holdMod": "shift",
+    "label": "⇧"
+   },
+   {
+    "holdMod": "ctrl",
+    "label": "ctrl"
+   },
+   {
+    "holdMod": "alt",
+    "label": "alt"
+   },
+   {
+    "holdMod": "gui",
+    "label": "gui"
+   },
+   {
+    "tap": "~",
+    "label": "~"
+   },
+   {
+    "tap": "!",
+    "label": "!"
+   },
+   {
+    "tap": "@",
+    "label": "@"
+   },
+   {
+    "tap": "#",
+    "label": "#"
+   },
+   {
+    "tap": "|",
+    "label": "|"
+   },
+   {
+    "label": ""
+   },
+   {
+    "label": ""
+   },
+   {
+    "label": ""
+   },
+   {
+    "holdMod": "alt",
+    "label": "alt"
+   },
+   {
+    "label": ""
+   },
+   {
+    "label": "",
+    "absent": true
+   },
+   {
+    "label": "",
+    "absent": true
+   },
+   {
+    "tap": "(",
+    "label": "("
+   },
+   {
+    "tap": ")",
+    "label": ")"
+   },
+   {
+    "tap": "_",
+    "label": "_"
+   },
+   {
+    "label": ""
+   },
+   {
+    "label": ""
+   },
+   {
+    "label": ""
+   },
+   {
+    "label": "",
+    "absent": true
+   },
+   {
+    "label": "",
+    "absent": true
+   }
+  ]
+ }
+}

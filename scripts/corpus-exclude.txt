@@ -1,0 +1,24 @@
+# Parole escluse dal corpus (una per riga, minuscole). Le righe con # sono commenti.
+# Dopo una modifica: bun run build:corpus
+cazzo
+cazzi
+cazzate
+cazzata
+merda
+stronzo
+stronza
+stronzi
+fottuto
+fottuta
+fottere
+fotti
+fanculo
+vaffanculo
+puttana
+puttane
+troia
+coglione
+coglioni
+bastardo
+bastardi
+bastarda
