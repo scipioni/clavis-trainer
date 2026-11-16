@@ -14,7 +14,7 @@ COPY . .
 ARG WEB=app/public
 RUN bun run test && bun test server && bun run build \
  && bun build server/main.ts --target bun --outfile /tmp/server.js \
- && mkdir -p /out/corpus/$WEB /out/web/$WEB /out/server/app \
+ && mkdir -p /out/corpus/$WEB /out/web/$WEB /out/server/app /out/datadir/data \
  && mv dist/corpus /out/corpus/$WEB/ \
  && cp -r dist/. /out/web/$WEB/ \
  # Bun non comprime al volo: versioni .gz accanto ai file (gzip -n: senza nome né data)
@@ -32,6 +32,8 @@ LABEL org.opencontainers.image.title="clavis-trainer" \
 COPY --link --from=build /out/corpus/ /
 COPY --link --from=build /out/web/ /
 COPY --link --from=build /out/server/ /
+# /data di bun (uid 1000): funziona anche senza volume; in produzione la copre ./data dell'host
+COPY --link --chown=1000:1000 --from=build /out/datadir/ /
 ENV NODE_ENV=production \
     PORT=8080 \
     DATA_DIR=/data \
@@ -42,5 +44,5 @@ LABEL org.opencontainers.image.version=$VERSION
 # utente bun = uid 1000: la cartella dei dati montata dall'host deve appartenergli
 USER bun
 EXPOSE 8080
-HEALTHCHECK --interval=60s --timeout=3s CMD wget -q -O /dev/null http://127.0.0.1:8080/api/config || exit 1
+HEALTHCHECK --interval=60s --timeout=3s --start-period=30s --start-interval=1s CMD wget -q -O /dev/null http://127.0.0.1:8080/api/config || exit 1
 CMD ["bun", "/app/server.js"]
