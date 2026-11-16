@@ -21,5 +21,5 @@
 
 - [x] 4.1 Dockerfile con runtime Bun, layer riproducibili (corpus, sito, server separati), healthcheck; `vite` con proxy `/api` in sviluppo; script `bun run server`; verifica: due build da zero hanno layer identici e il container risponde su `/` e `/api/config`
 - [x] 4.2 Smoke test e2e esteso: server avviato con il bot finto (variabile `TELEGRAM_FAKE=1`), accesso, due contesti browser che si sincronizzano, uscita; verifica: `bun tests/e2e/smoke.ts` passa contro il container locale
-- [ ] 4.3 Deploy: compose con volume `data/` e token da `.env`, `update.sh` che ricrea il container anche quando cambia la configurazione, rollback che non sovrascrive `.env`, README aggiornato (bot, token, backup del DB); verifica: su cubo il sito funziona senza token, con `/api/config` a `telegram: false`, e lo smoke test passa contro la produzione
-- [ ] 4.4 Pubblicare: commit, push, immagine su Docker Hub, aggiornamento su cubo; verifica: `https://clavis.mywire.org/api/config` risponde e `update.log` riporta la nuova versione
+- [x] 4.3 Deploy: compose con volume `data/` e token da `.env`, `update.sh` che ricrea il container anche quando cambia la configurazione, rollback che non sovrascrive `.env`, README aggiornato (bot, token, backup del DB); verifica: su cubo il sito funziona senza token, con `/api/config` a `telegram: false`, e lo smoke test passa contro la produzione
+- [x] 4.4 Pubblicare: commit, push, immagine su Docker Hub, aggiornamento su cubo; verifica: `https://clavis.mywire.org/api/config` risponde e `update.log` riporta la nuova versione
