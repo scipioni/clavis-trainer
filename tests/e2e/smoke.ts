@@ -126,7 +126,7 @@ await page.getByRole('button', { name: 'Prepara la sessione' }).click();
 }
 await page.locator('.results').waitFor();
 const shownWpm = Number(await tile('WPM'));
-const shownChars = await page.locator('.tile .l', { hasText: 'caratteri' }).innerText();
+const shownChars = await tile('caratteri');
 await page.getByRole('button', { name: 'Impostazioni' }).click();
 const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Esporta JSON' }).click()]);
 const exported = JSON.parse(readFileSync(await download.path(), 'utf8'));
@@ -134,7 +134,7 @@ const timed = exported.sessions.find((x: { durationMs: number | null }) => x.dur
 const recomputed = computeResult(timed.samples, timed.result.activeMs);
 check(timed.result.activeMs === 30_000, `sessione da 30 s: tempo attivo ${timed.result.activeMs} ms`);
 check(Math.round(recomputed.wpm) === shownWpm, `WPM a schermo ${shownWpm} = ricalcolato ${recomputed.wpm.toFixed(1)}`);
-check(shownChars.startsWith(String(recomputed.chars)), `caratteri a schermo "${shownChars}" = ricalcolati ${recomputed.chars}`);
+check(shownChars === String(recomputed.chars), `caratteri a schermo ${shownChars} = ricalcolati ${recomputed.chars}`);
 
 // --- le impostazioni sopravvivono al ricaricamento
 const deadBox = page.getByRole('checkbox', { name: /Tasti morti/ });

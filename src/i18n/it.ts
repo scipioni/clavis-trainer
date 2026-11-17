@@ -44,12 +44,14 @@ export const it = {
   'train.exerciseLang': 'Lingua degli esercizi',
 
   // risultati
+  'results.title': 'Sessione completata',
   'results.wpm': 'WPM',
   'results.accuracy': 'precisione',
   'results.errors': 'errori',
   'results.deadErrors': 'da tasti morti',
   'results.misfires': 'mod involontari',
-  'results.chars': (n: number) => plural(n, 'carattere', 'caratteri'),
+  'results.chars': 'caratteri',
+  'results.time': 'tempo attivo',
   'results.slowChars': 'Caratteri più lenti',
   'results.slowBigrams': 'Bigrammi più lenti',
   'results.again': 'Nuova sessione',

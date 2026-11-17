@@ -8,7 +8,10 @@ statistics over time, kept separately for each keyboard and layout. Training
 runs entirely in the browser (IndexedDB); signing in with Telegram is optional
 and makes your history follow you across devices.
 
-![Training session: the on-screen keyboard switches to the NUM layer to show how to type the apostrophe](docs/screenshot.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/stats-dark.png">
+  <img src="docs/stats.png" alt="Statistics page: WPM and accuracy trends and the heat map of the clavis base layer">
+</picture>
 
 ## Features
 
@@ -23,12 +26,6 @@ and makes your history follow you across devices.
   mod rolls are counted separately.
 - **Statistics**: WPM and accuracy trends, a per-layer heat map, and rankings of
   weak units with a "train this" button.
-
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/stats-dark.png">
-    <img src="docs/stats.png" alt="Statistics page: WPM and accuracy trends and the heat map of the clavis base layer">
-  </picture>
-
 - **Local first**: everything works offline and without an account; export,
   import and reset from the settings page.
 - **Telegram sign-in and sync** (optional): the site shows a code, the bot shows
