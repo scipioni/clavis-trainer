@@ -10,6 +10,9 @@ import { SyncEngine } from '../sync/engine';
 
 export type View = 'train' | 'stats' | 'settings' | 'about';
 
+/** Oltre questo tempo un'apertura del database ferma va spiegata all'utente. */
+const DB_SLOW_MS = 3000;
+
 /** Ogni quanto sincronizzare mentre la pagina è visibile. */
 const SYNC_INTERVAL_MS = 5 * 60 * 1000;
 
@@ -95,10 +98,16 @@ class AppState {
 
   async init() {
     try {
+      // Se l'apertura è in coda dietro un'altra richiesta bloccata, il browser non
+      // segnala "blocked" a questa pagina: dopo qualche secondo lo diciamo comunque.
+      const slow = setTimeout(() => {
+        if (!this.ready && !this.error) this.dbBlocked = true;
+      }, DB_SLOW_MS);
       const store = await TrainerStore.open(undefined, {
         onBlocked: () => (this.dbBlocked = true),
         onVersionChange: () => (this.outdated = true),
       });
+      clearTimeout(slow);
       this.dbBlocked = false;
       this.store = store;
       this.engine = new SyncEngine(this.api, store);

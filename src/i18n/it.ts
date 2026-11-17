@@ -12,7 +12,7 @@ export const it = {
   'app.interrupted': (date: string, chars: number) => `Sessione interrotta del ${date} (${plural(chars, 'carattere', 'caratteri')}).`,
   'app.keepInterrupted': 'Salvala come completata',
   'app.discardInterrupted': 'Scartala',
-  'app.blocked': "Un'altra scheda di clavis-trainer è aperta con una versione precedente e blocca l'aggiornamento: chiudila o ricaricala, e questa pagina continuerà da sola.",
+  'app.blocked': "Il database del browser è occupato da un'altra scheda di clavis-trainer, probabilmente con una versione precedente (anche in un'altra finestra). Chiudi tutte le altre schede di clavis-trainer: questa pagina continuerà da sola.",
   'app.outdated': "In un'altra scheda è stata aperta una versione nuova di clavis-trainer. Ricarica questa pagina per continuare.",
   'app.reload': 'Ricarica',
   'common.cancel': 'Annulla',

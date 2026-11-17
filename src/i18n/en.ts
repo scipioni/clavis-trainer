@@ -12,7 +12,7 @@ export const en: Messages = {
   'app.interrupted': (date, chars) => `Interrupted session from ${date} (${plural(chars, 'character', 'characters')}).`,
   'app.keepInterrupted': 'Save it as completed',
   'app.discardInterrupted': 'Discard it',
-  'app.blocked': 'Another clavis-trainer tab is open with an older version and blocks the update: close or reload it and this page will continue by itself.',
+  'app.blocked': 'The browser database is held by another clavis-trainer tab, probably running an older version (possibly in another window). Close all other clavis-trainer tabs: this page will continue by itself.',
   'app.outdated': 'A newer version of clavis-trainer was opened in another tab. Reload this page to continue.',
   'app.reload': 'Reload',
   'common.cancel': 'Cancel',
