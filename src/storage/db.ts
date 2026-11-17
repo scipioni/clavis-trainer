@@ -52,8 +52,25 @@ export const EMPTY_SYNC: SyncMeta = { account: null, cursor: 0, pending: [], set
 export class TrainerStore {
   private constructor(private readonly db: IDBPDatabase<TrainerDB>) {}
 
-  static async open(name = 'clavis-trainer'): Promise<TrainerStore> {
+  /**
+   * Apre (e se serve aggiorna) il database del browser.
+   * - `onBlocked`: un'altra scheda con una versione vecchia tiene aperto il
+   *   database e l'aggiornamento aspetta che la chiuda;
+   * - `onVersionChange`: un'altra scheda con una versione più nuova vuole
+   *   aggiornarlo: questa connessione si chiude subito per non bloccarla.
+   */
+  static async open(
+    name = 'clavis-trainer',
+    hooks: { onBlocked?: () => void; onVersionChange?: () => void } = {},
+  ): Promise<TrainerStore> {
     const db = await openDB<TrainerDB>(name, DB_VERSION, {
+      blocked() {
+        hooks.onBlocked?.();
+      },
+      blocking() {
+        db.close();
+        hooks.onVersionChange?.();
+      },
       async upgrade(db, oldVersion, _newVersion, tx) {
         if (oldVersion < 1) {
           const sessions = db.createObjectStore('sessions', { keyPath: 'id' });

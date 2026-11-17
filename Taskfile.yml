@@ -6,12 +6,15 @@ vars:
   REMOTE_DIR: clavis-trainer
   SHA:
     sh: git rev-parse --short=7 HEAD
+  # versione se HEAD ha un tag vX.Y.Z (es. v0.2.0 → 0.2.0), altrimenti vuota
+  VERSION:
+    sh: git describe --tags --exact-match --match 'v*' 2>/dev/null | sed 's/^v//' || true
 
 tasks:
   docker:build:
     desc: Costruisce l'immagine locale (esegue anche i test unitari)
     cmds:
-      - docker build --build-arg VERSION=sha-{{.SHA}} -t {{.IMAGE}}:sha-{{.SHA}} -t {{.IMAGE}}:latest .
+      - docker build --build-arg VERSION={{if .VERSION}}{{.VERSION}}{{else}}sha-{{.SHA}}{{end}} -t {{.IMAGE}}:sha-{{.SHA}} -t {{.IMAGE}}:latest .
 
   docker:run:
     desc: Avvia l'immagine locale su http://localhost:8088
@@ -30,7 +33,7 @@ tasks:
       - bun tests/e2e/profiles.ts http://localhost:8088/
 
   docker:publish:
-    desc: Rilascio manuale su Docker Hub (sha-<commit> e latest); di norma lo fa la CI
+    desc: Rilascio manuale su Docker Hub (sha-<commit>, latest e la versione se HEAD ha un tag vX.Y.Z)
     preconditions:
       - sh: git diff --quiet && git diff --cached --quiet
         msg: Ci sono modifiche non committate, il tag sha-{{.SHA}} non corrisponderebbe al codice
@@ -38,6 +41,7 @@ tasks:
     cmds:
       - docker push {{.IMAGE}}:sha-{{.SHA}}
       - docker push {{.IMAGE}}:latest
+      - '{{if .VERSION}}docker tag {{.IMAGE}}:sha-{{.SHA}} {{.IMAGE}}:{{.VERSION}} && docker push {{.IMAGE}}:{{.VERSION}}{{end}}'
 
   deploy:install:
     desc: Copia compose e script su cubo, installa il cron di aggiornamento e avvia

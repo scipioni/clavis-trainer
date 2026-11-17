@@ -146,3 +146,34 @@ describe('statistiche per profilo (IndexedDB v2)', () => {
     expect(st['finger:R-ring']).toBeDefined();
   });
 });
+
+describe('aggiornamento con altre schede aperte', () => {
+  test('una scheda vecchia aperta blocca: onBlocked, poi si sblocca quando la chiude', async () => {
+    const { openDB } = await import('idb');
+    const name = `blocked-${++n}`;
+    const v1 = await openDB(name, 1, {
+      upgrade(db) {
+        db.createObjectStore('sessions', { keyPath: 'id' }).createIndex('startedAt', 'startedAt');
+        db.createObjectStore('kv');
+      },
+    });
+    let blocked = false;
+    const opening = TrainerStore.open(name, { onBlocked: () => (blocked = true) });
+    await new Promise((r) => setTimeout(r, 50));
+    expect(blocked).toBe(true);
+    v1.close(); // la scheda vecchia si chiude
+    const store = await opening;
+    expect(await store.listSessions()).toEqual([]);
+  });
+
+  test('una versione più nuova in arrivo: questa connessione si chiude e avvisa', async () => {
+    const { openDB } = await import('idb');
+    const name = `blocking-${++n}`;
+    let outdated = false;
+    await TrainerStore.open(name, { onVersionChange: () => (outdated = true) });
+    // un'altra scheda apre una versione futura del database: non resta bloccata
+    const future = await openDB(name, 99);
+    expect(outdated).toBe(true);
+    future.close();
+  });
+});

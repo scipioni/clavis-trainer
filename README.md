@@ -169,6 +169,11 @@ image is public on Docker Hub: `scipioit/clavis-trainer`.
    recreates the container when the image or the configuration (`.env`)
    changed, and logs one line to `~/clavis-trainer/update.log`.
 
+Versioned releases: tag the commit `vX.Y.Z` (and set the same version in
+`package.json`). Pushing the tag makes the workflow publish `X.Y.Z` too;
+`task docker:publish` on a tagged commit does the same by hand. Production
+keeps following `latest`.
+
 Releases are small. The Bun base image is downloaded once; corpus, site and
 server are reproducible layers (the Dockerfile zeroes all mtimes), so a release
 only ships the layers that changed: typically the site (about 160 kB) and the

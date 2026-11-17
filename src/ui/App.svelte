@@ -41,10 +41,20 @@
 {#if app.loginOpen}<LoginDialog />{/if}
 
 <main>
+  {#if app.outdated}
+    <div class="banner" role="alert">
+      {t('app.outdated')}
+      <button class="primary" onclick={() => location.reload()}>{t('app.reload')}</button>
+    </div>
+  {/if}
   {#if app.error}
     <p class="error">{t('app.startError', app.error)}</p>
   {:else if !app.ready}
-    <p class="muted">{t('app.loading')}</p>
+    {#if app.dbBlocked}
+      <p class="banner" role="alert">{t('app.blocked')}</p>
+    {:else}
+      <p class="muted">{t('app.loading')}</p>
+    {/if}
   {:else}
     {#each app.interrupted as s (s.id)}
       <div class="banner">

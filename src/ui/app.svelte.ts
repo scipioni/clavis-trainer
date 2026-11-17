@@ -48,6 +48,10 @@ class AppState {
   });
   /** Dialogo di accesso aperto. */
   loginOpen = $state(false);
+  /** L'aggiornamento del database aspetta che si chiuda una scheda con una versione vecchia. */
+  dbBlocked = $state(false);
+  /** Un'altra scheda ha aggiornato il database: questa va ricaricata. */
+  outdated = $state(false);
 
   store!: TrainerStore;
   api: AccountApi = new HttpAccountApi();
@@ -91,7 +95,11 @@ class AppState {
 
   async init() {
     try {
-      const store = await TrainerStore.open();
+      const store = await TrainerStore.open(undefined, {
+        onBlocked: () => (this.dbBlocked = true),
+        onVersionChange: () => (this.outdated = true),
+      });
+      this.dbBlocked = false;
       this.store = store;
       this.engine = new SyncEngine(this.api, store);
       // utente nuovo: lingue dalla lingua del browser
