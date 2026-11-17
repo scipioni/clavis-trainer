@@ -38,4 +38,4 @@
 
 ## 7. Verifica d'insieme
 
-- [ ] 7.1 Suite complete (`bun run test`, `bun test server`, `bun run check`, e2e smoke, account e profili) contro l'immagine locale, poi rilascio e smoke test contro la produzione; verifica: tutte verdi e `update.log` su cubo riporta la nuova versione
+- [x] 7.1 Suite complete (`bun run test`, `bun test server`, `bun run check`, e2e smoke, account e profili) contro l'immagine locale, poi rilascio e smoke test contro la produzione; verifica: tutte verdi e `update.log` su cubo riporta la nuova versione
