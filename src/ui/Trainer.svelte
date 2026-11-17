@@ -11,6 +11,7 @@
   import ProfilePicker from './ProfilePicker.svelte';
   import { showChar, unitLabel } from './labels';
   import { t } from '../i18n/index.svelte';
+  import { focusOnShow } from './focusOnShow';
 
   const DURATIONS = $derived<{ label: string; sec: number | null }[]>([
     { label: '30 s', sec: 30 },
@@ -191,9 +192,22 @@
     if (session?.status === 'running') void send({ type: 'blur', t: performance.now() });
   }
 
+  /**
+   * Tiene la riga del cursore come seconda riga visibile: sopra resta la riga
+   * appena scritta, sotto si vede il testo che arriva. Il riquadro scorre di una
+   * riga intera solo quando il cursore va a capo.
+   */
   async function scrollToCursor() {
     await tick();
-    textBox?.querySelector('.cur')?.scrollIntoView({ block: 'nearest' });
+    const box = textBox;
+    const cur = box?.querySelector<HTMLElement>('.cur');
+    if (!box || !cur) return;
+    const line = parseFloat(getComputedStyle(box).lineHeight);
+    if (!line) return;
+    // indice della riga del cursore (offsetTop è quello del glifo, dentro la riga)
+    const row = Math.floor(cur.offsetTop / line + 0.01);
+    const top = Math.max(0, (row - 1) * line);
+    if (Math.abs(box.scrollTop - top) > 1) box.scrollTop = top;
   }
 
   onDestroy(() => {
@@ -297,15 +311,18 @@
     </div>
 
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-    <div class="text" bind:this={textBox} onclick={() => input?.focus()}>
-      {#each view.s.chars as c, i (i)}
-        <span
-          class:done={i < view.s.index}
-          class:err={view.errored.has(i)}
-          class:cur={i === view.s.index}
-          class:wrong={i === view.s.index && view.s.currentWrong !== null}
-          class:dead={i === view.s.index && view.s.pendingDead}>{c === ' ' && i === view.s.index ? '␣' : c}</span>
-      {/each}
+    <div class="text" onclick={() => input?.focus()}>
+      <div class="lines" bind:this={textBox}>
+        {#each view.s.chars as c, i (i)}
+          <span
+            class:done={i < view.s.index}
+            class:err={view.errored.has(i)}
+            class:cur={i === view.s.index}
+            class:wrong={i === view.s.index && view.s.currentWrong !== null}
+            class:dead={i === view.s.index && view.s.pendingDead}
+            class:space={c === ' '}>{c}</span>
+        {/each}
+      </div>
     </div>
     <textarea
       class="sink"
@@ -330,7 +347,7 @@
     {/if}
   {:else}
     <div class="start">
-      <button class="primary" onclick={prepare} disabled={!app.corpusReady}>{t('train.prepare')}</button>
+      <button class="primary" use:focusOnShow onclick={prepare} disabled={!app.corpusReady}>{t('train.prepare')}</button>
       <p class="muted">{t('train.prepareHint')}</p>
     </div>
   {/if}
@@ -396,11 +413,17 @@
     border: 1px solid var(--border);
     border-radius: 10px;
     background: var(--panel);
+    /* break-spaces: lo spazio a fine riga occupa posto e il cursore ci si vede sopra */
+    white-space: break-spaces;
+    overflow-wrap: break-word;
+    cursor: text;
+  }
+  /* la parte che scorre non ha padding: alta 4 righe esatte e fatta scorrere
+     di righe intere, non mostra mai una riga tagliata a metà */
+  .lines {
+    position: relative;
     max-height: 8.8rem;
     overflow-y: auto;
-    white-space: pre-wrap;
-    word-break: break-word;
-    cursor: text;
   }
   .text span {
     color: var(--muted);
@@ -420,6 +443,18 @@
   .text .cur.wrong {
     background: var(--danger);
     color: var(--accent-fg);
+  }
+  /* il segno ␣ è disegnato sopra lo spazio, senza sostituirlo: il testo non
+     cambia e le righe non si ricompongono mentre il cursore lo attraversa */
+  .text .cur.space {
+    position: relative;
+  }
+  .text .cur.space::after {
+    content: '␣';
+    position: absolute;
+    left: 0;
+    right: 0;
+    text-align: center;
   }
   .text .cur.dead {
     outline: 2px dashed var(--hold);

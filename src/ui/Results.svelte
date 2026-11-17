@@ -2,6 +2,7 @@
   import type { SessionResult } from '../core/session/result';
   import { pct, ms, showChar } from './labels';
   import { fmtNum, t } from '../i18n/index.svelte';
+  import { focusOnShow } from './focusOnShow';
 
   interface Props {
     result: SessionResult;
@@ -39,7 +40,7 @@
     </div>
   </div>
 
-  <button class="primary" onclick={onAgain}>{t('results.again')}</button>
+  <button class="primary" use:focusOnShow onclick={onAgain}>{t('results.again')}</button>
 </section>
 
 <style>

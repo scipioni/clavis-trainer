@@ -23,6 +23,12 @@ and makes your history follow you across devices.
   mod rolls are counted separately.
 - **Statistics**: WPM and accuracy trends, a per-layer heat map, and rankings of
   weak units with a "train this" button.
+
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/stats-dark.png">
+    <img src="docs/stats.png" alt="Statistics page: WPM and accuracy trends and the heat map of the clavis base layer">
+  </picture>
+
 - **Local first**: everything works offline and without an account; export,
   import and reset from the settings page.
 - **Telegram sign-in and sync** (optional): the site shows a code, the bot shows
