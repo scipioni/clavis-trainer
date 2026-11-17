@@ -2,6 +2,7 @@ import type { Resolver } from '../keyboard/resolver';
 import { rankAll, unexplored, type StatsTable } from '../analysis/stats';
 import { parseUnitKey, unitKey, unitsOf } from '../analysis/units';
 import { WeightedTable, pickWeighted, type Rng } from './random';
+import type { Lang } from './languages';
 
 export interface Corpus {
   words: [string, number][];
@@ -35,7 +36,8 @@ export const MIN_TARGET_WEIGHT = 0.05;
 
 const END_PUNCT = ['.', '?', '!'];
 const MID_PUNCT = [',', ';', ':'];
-const ELISIONS = ["l'", "dell'", "all'", "nell'", "un'", "d'", "c'"];
+/** Elisioni italiane davanti a vocale: in inglese l'apostrofo arriva dalle contrazioni del corpus. */
+const ELISIONS: Record<Lang, string[]> = { it: ["l'", "dell'", "all'", "nell'", "un'", "d'", "c'"], en: [] };
 
 interface Target {
   key: string;
@@ -52,6 +54,7 @@ export class ExerciseGenerator {
   constructor(
     readonly corpus: Corpus,
     readonly resolver: Resolver,
+    readonly lang: Lang = 'it',
   ) {
     this.corpus = {
       words: corpus.words.filter(([w]) => resolver.canTypeAll(w)),
@@ -142,10 +145,12 @@ export class ExerciseGenerator {
         }
       }
 
-      if (opts.punctuation > 0 && rng() < opts.punctuation * 0.3 && /^[aeiouàèéìòù]/.test(word)) {
-        word = ELISIONS[Math.floor(rng() * ELISIONS.length)] + word;
+      const elisions = ELISIONS[this.lang];
+      if (elisions.length && opts.punctuation > 0 && rng() < opts.punctuation * 0.3 && /^[aeiouàèéìòù]/.test(word)) {
+        const elided = elisions[Math.floor(rng() * elisions.length)] + word;
+        if (this.resolver.canTypeAll(elided)) word = elided;
       }
-      if (capitalizeNext || (opts.capitals > 0 && rng() < opts.capitals)) word = capitalize(word);
+      if (capitalizeNext || (opts.capitals > 0 && rng() < opts.capitals)) word = this.capitalized(word);
       capitalizeNext = false;
       if (opts.punctuation > 0 && rng() < opts.punctuation) {
         const r = rng();
@@ -161,6 +166,12 @@ export class ExerciseGenerator {
       if (opts.digits > 0 && rng() < opts.digits) tokens.push(this.number(charScores, rng));
     }
     return tokens.join(' ');
+  }
+
+  /** Maiuscola solo se il profilo sa scriverla (con l'italiano su tastiera classica `È` non esiste). */
+  private capitalized(w: string): string {
+    const c = capitalize(w);
+    return this.resolver.canTypeAll(c) ? c : w;
   }
 
   private number(scores: Map<string, number>, rng: Rng): string {
@@ -186,13 +197,16 @@ export class ExerciseGenerator {
     if (/[A-ZÀÈÉÌÒÙ]/.test(c)) {
       if (opts.capitals <= 0) return null;
       const w = this.wordWith(`char:${c.toLowerCase()}`, rng) ?? word;
-      return capitalize(w);
+      return this.capitalized(w);
     }
     if (/[a-zàèéìòù ]/.test(c)) return null;
     if (opts.punctuation <= 0 || !this.resolver.canType(c)) return null;
     if (c === '(' || c === ')') return `(${word})`;
     if (c === '"') return `"${word}"`;
-    if (c === "'") return ELISIONS[0] + (this.wordWith('char:a', rng) ?? word);
+    if (c === "'") {
+      const e = ELISIONS[this.lang][0];
+      return e ? e + (this.wordWith('char:a', rng) ?? word) : this.wordWith("char:'", rng);
+    }
     return word + c;
   }
 

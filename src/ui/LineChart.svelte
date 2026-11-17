@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../i18n/index.svelte';
   interface Point {
     label: string;
     value: number;
@@ -37,12 +38,12 @@
 <figure>
   <figcaption>{title}</figcaption>
   {#if points.length === 0}
-    <p class="muted">Nessun dato ancora.</p>
+    <p class="muted">{t('stats.noData')}</p>
   {:else}
     <svg viewBox="0 0 {W} {H}" role="img" aria-label={title}>
-      {#each ticks as t (t)}
-        <line x1={PAD.l} x2={W - PAD.r} y1={scale.y(t)} y2={scale.y(t)} class="grid" />
-        <text x={PAD.l - 6} y={scale.y(t) + 4} class="axis">{format(t)}</text>
+      {#each ticks as tick (tick)}
+        <line x1={PAD.l} x2={W - PAD.r} y1={scale.y(tick)} y2={scale.y(tick)} class="grid" />
+        <text x={PAD.l - 6} y={scale.y(tick) + 4} class="axis">{format(tick)}</text>
       {/each}
       <text x={PAD.l} y={H - 6} class="axis start">{points[0].label}</text>
       {#if points.length > 1}<text x={W - PAD.r} y={H - 6} class="axis end">{points[points.length - 1].label}</text>{/if}

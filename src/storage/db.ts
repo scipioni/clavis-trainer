@@ -1,10 +1,12 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
-import type { Resolver } from '../core/keyboard/resolver';
 import { applySamples, recompute, type StatsTable } from '../core/analysis/stats';
+import { resolverFor } from '../core/keyboard';
+import { DEFAULT_PROFILE, profileId, type Profile } from '../core/keyboard/types';
 import {
   DEFAULT_SETTINGS,
   EXPORT_FORMAT,
   EXPORT_VERSION,
+  sessionProfile,
   type ExportData,
   type Settings,
   type StoredSession,
@@ -18,9 +20,17 @@ interface TrainerDB extends DBSchema {
   kv: { key: string; value: unknown };
 }
 
-const STATS_KEY = 'stats';
+/** Versione 1: una sola tabella `stats`. Versione 2: una tabella per profilo. */
+const DB_VERSION = 2;
+const LEGACY_STATS_KEY = 'stats';
+const statsKey = (p: Profile) => `stats:${profileId(p)}`;
+const STATS_VERSION_KEY = 'statsVersion';
 const SETTINGS_KEY = 'settings';
 const SYNC_KEY = 'sync';
+
+/** Risolutore con cui è stata fatta una sessione. */
+const resolverOf = (s: StoredSession) => resolverFor(sessionProfile(s), { deadKeys: s.deadKeys });
+const sameProfile = (p: Profile) => (s: StoredSession) => profileId(sessionProfile(s)) === profileId(p);
 
 /** Stato della sincronizzazione con l'account, in kv. */
 export interface SyncMeta {
@@ -43,14 +53,29 @@ export class TrainerStore {
   private constructor(private readonly db: IDBPDatabase<TrainerDB>) {}
 
   static async open(name = 'clavis-trainer'): Promise<TrainerStore> {
-    const db = await openDB<TrainerDB>(name, 1, {
-      upgrade(db) {
-        const sessions = db.createObjectStore('sessions', { keyPath: 'id' });
-        sessions.createIndex('startedAt', 'startedAt');
-        db.createObjectStore('kv');
+    const db = await openDB<TrainerDB>(name, DB_VERSION, {
+      async upgrade(db, oldVersion, _newVersion, tx) {
+        if (oldVersion < 1) {
+          const sessions = db.createObjectStore('sessions', { keyPath: 'id' });
+          sessions.createIndex('startedAt', 'startedAt');
+          db.createObjectStore('kv');
+        }
+        if (oldVersion === 1) {
+          // le statistiche di prima sono tutte di clavis + Colemak-DH
+          const kv = tx.objectStore('kv');
+          const old = await kv.get(LEGACY_STATS_KEY);
+          if (old !== undefined) await kv.put(old, statsKey(DEFAULT_PROFILE));
+          await kv.delete(LEGACY_STATS_KEY);
+        }
       },
     });
-    return new TrainerStore(db);
+    const store = new TrainerStore(db);
+    // al primo avvio dopo l'aggiornamento: statistiche ricalcolate dallo storico, profilo per profilo
+    if ((await db.get('kv', STATS_VERSION_KEY)) !== DB_VERSION) {
+      await store.recomputeStats();
+      await db.put('kv', DB_VERSION, STATS_VERSION_KEY);
+    }
+    return store;
   }
 
   close() {
@@ -66,17 +91,18 @@ export class TrainerStore {
     await this.db.delete('sessions', id);
   }
 
-  /** Registra una sessione completata e aggiorna le statistiche nella stessa transazione. */
-  async completeSession(s: StoredSession, resolver: Resolver): Promise<StatsTable> {
+  /** Registra una sessione completata e aggiorna le statistiche del suo profilo nella stessa transazione. */
+  async completeSession(s: StoredSession): Promise<StatsTable> {
+    const key = statsKey(sessionProfile(s));
     const tx = this.db.transaction(['sessions', 'kv'], 'readwrite');
     const kv = tx.objectStore('kv');
-    const table = ((await kv.get(STATS_KEY)) as StatsTable | undefined) ?? {};
-    applySamples(table, s.samples, resolver);
+    const table = ((await kv.get(key)) as StatsTable | undefined) ?? {};
+    applySamples(table, s.samples, resolverOf(s));
     const meta = { ...EMPTY_SYNC, ...((await kv.get(SYNC_KEY)) as Partial<SyncMeta> | undefined) };
     if (!meta.pending.includes(s.id)) meta.pending = [...meta.pending, s.id];
     await Promise.all([
       tx.objectStore('sessions').put({ ...s, status: 'completed' }),
-      kv.put(table, STATS_KEY),
+      kv.put(table, key),
       kv.put(meta, SYNC_KEY),
       tx.done,
     ]);
@@ -117,29 +143,51 @@ export class TrainerStore {
     return added;
   }
 
-  /** Ricalcola le statistiche da tutto lo storico in ordine cronologico. */
-  async recomputeStats(resolver: Resolver): Promise<StatsTable> {
-    const table = recompute(await this.listSessions(), resolver);
-    await this.db.put('kv', table, STATS_KEY);
-    return table;
+  /** Ricalcola da tutto lo storico, in ordine cronologico, le statistiche di ogni profilo. */
+  async recomputeStats(): Promise<void> {
+    const tables = this.computeAll(await this.listSessions());
+    const tx = this.db.transaction('kv', 'readwrite');
+    for (const key of await tx.store.getAllKeys()) {
+      if (String(key).startsWith('stats:') && !tables.has(String(key))) await tx.store.delete(key);
+    }
+    for (const [key, table] of tables) await tx.store.put(table, key);
+    await tx.done;
+  }
+
+  private computeAll(sessions: StoredSession[]): Map<string, StatsTable> {
+    const byProfile = new Map<string, StoredSession[]>();
+    for (const s of sessions) {
+      const key = statsKey(sessionProfile(s));
+      let list = byProfile.get(key);
+      if (!list) byProfile.set(key, (list = []));
+      list.push(s);
+    }
+    return new Map([...byProfile].map(([key, list]) => [key, recompute(list, resolverOf)]));
   }
 
   async findInProgress(): Promise<StoredSession[]> {
     return (await this.db.getAll('sessions')).filter((s) => s.status === 'in-progress');
   }
 
-  /** Sessioni completate in ordine cronologico. */
-  async listSessions(): Promise<StoredSession[]> {
-    return (await this.db.getAllFromIndex('sessions', 'startedAt')).filter((s) => s.status === 'completed');
+  /** Sessioni completate in ordine cronologico, eventualmente solo di un profilo. */
+  async listSessions(profile?: Profile): Promise<StoredSession[]> {
+    const all = (await this.db.getAllFromIndex('sessions', 'startedAt')).filter((s) => s.status === 'completed');
+    return profile ? all.filter(sameProfile(profile)) : all;
   }
 
-  async getStats(): Promise<StatsTable> {
-    return ((await this.db.get('kv', STATS_KEY)) as StatsTable | undefined) ?? {};
+  /** Statistiche del profilo (predefinito: clavis + Colemak-DH). */
+  async getStats(profile: Profile = DEFAULT_PROFILE): Promise<StatsTable> {
+    return ((await this.db.get('kv', statsKey(profile))) as StatsTable | undefined) ?? {};
   }
 
-  async getSettings(): Promise<Settings> {
+  /** Impostazioni salvate, completate con `defaults` (per un utente nuovo: lingue dal browser). */
+  async getSettings(defaults: Settings = DEFAULT_SETTINGS): Promise<Settings> {
     const s = (await this.db.get('kv', SETTINGS_KEY)) as Partial<Settings> | undefined;
-    return { ...DEFAULT_SETTINGS, ...s };
+    return { ...defaults, ...s };
+  }
+
+  async hasSettings(): Promise<boolean> {
+    return (await this.db.get('kv', SETTINGS_KEY)) !== undefined;
   }
 
   /** Salva le impostazioni; `updatedAt` serve a far vincere l'ultima modifica tra dispositivi. */
@@ -162,9 +210,9 @@ export class TrainerStore {
    * Sostituisce tutti i dati con quelli importati e ricalcola le statistiche.
    * Va chiamata dopo `parseExport`: un file non valido non arriva qui.
    */
-  async importData(data: ExportData, resolver: Resolver): Promise<void> {
+  async importData(data: ExportData): Promise<void> {
     const sessions = [...data.sessions].sort((a, b) => a.startedAt - b.startedAt);
-    const table = recompute(sessions, resolver);
+    const tables = this.computeAll(sessions);
     const tx = this.db.transaction(['sessions', 'kv'], 'readwrite');
     const store = tx.objectStore('sessions');
     const kv = tx.objectStore('kv');
@@ -172,7 +220,8 @@ export class TrainerStore {
     await store.clear();
     await kv.clear();
     for (const s of sessions) await store.put(s);
-    await kv.put(table, STATS_KEY);
+    for (const [key, table] of tables) await kv.put(table, key);
+    await kv.put(DB_VERSION, STATS_VERSION_KEY);
     await kv.put({ ...DEFAULT_SETTINGS, ...data.settings }, SETTINGS_KEY);
     // lo storico importato è tutto da inviare; l'account resta quello del browser
     const meta: SyncMeta = { ...EMPTY_SYNC, account: prev.account, pending: sessions.map((s) => s.id), settingsUpdatedAt: Date.now() };
@@ -182,6 +231,7 @@ export class TrainerStore {
 
   async reset(): Promise<void> {
     const tx = this.db.transaction(['sessions', 'kv'], 'readwrite');
-    await Promise.all([tx.objectStore('sessions').clear(), tx.objectStore('kv').clear(), tx.done]);
+    const kv = tx.objectStore('kv');
+    await Promise.all([tx.objectStore('sessions').clear(), kv.clear(), kv.put(DB_VERSION, STATS_VERSION_KEY), tx.done]);
   }
 }

@@ -1,5 +1,8 @@
-import { clavisResolver, type Resolver } from '../core/keyboard';
+import { resolverFor, profileId, type Profile, type Resolver } from '../core/keyboard';
 import { ExerciseGenerator, type Corpus } from '../core/exercise/generator';
+import type { Lang } from '../core/exercise/languages';
+import { sessionProfile } from '../core/data';
+import { detectLanguage, i18n, t } from '../i18n/index.svelte';
 import type { StatsTable } from '../core/analysis/stats';
 import { DEFAULT_SETTINGS, TrainerStore, type ExportData, type Settings, type StoredSession } from '../storage/db';
 import { HttpAccountApi, OfflineError, UnauthorizedError, type AccountApi, type AccountUser } from '../sync/api';
@@ -31,8 +34,12 @@ class AppState {
   ready = $state(false);
   error = $state<string | null>(null);
   settings = $state<Settings>({ ...DEFAULT_SETTINGS });
+  /** Statistiche del profilo attivo. */
   stats = $state.raw<StatsTable>({});
+  /** Tutte le sessioni completate (ogni profilo). */
   sessions = $state.raw<StoredSession[]>([]);
+  /** Corpus della lingua degli esercizi caricato (si scaricano solo quelli usati). */
+  corpusReady = $state(false);
   interrupted = $state.raw<StoredSession[]>([]);
   /** Unità su cui fare l'allenamento mirato alla prossima sessione. */
   focus = $state<string | null>(null);
@@ -43,34 +50,57 @@ class AppState {
   loginOpen = $state(false);
 
   store!: TrainerStore;
-  corpus!: Corpus;
   api: AccountApi = new HttpAccountApi();
   engine!: SyncEngine;
-  private generators = new Map<boolean, ExerciseGenerator>();
+  private corpora: Partial<Record<Lang, Corpus>> = {};
+  private generators = new Map<string, ExerciseGenerator>();
   private settingsTimer: ReturnType<typeof setTimeout> | null = null;
 
-  get resolver(): Resolver {
-    return clavisResolver({ deadKeys: this.settings.deadKeys });
+  get profile(): Profile {
+    return { keyboard: this.settings.keyboard, layout: this.settings.layout };
   }
 
+  get resolver(): Resolver {
+    return resolverFor(this.profile, { deadKeys: this.settings.deadKeys });
+  }
+
+  /** Sessioni del profilo attivo, in ordine cronologico. */
+  get profileSessions(): StoredSession[] {
+    const id = profileId(this.profile);
+    return this.sessions.filter((s) => profileId(sessionProfile(s)) === id);
+  }
+
+  /** Generatore per lingua degli esercizi e profilo (richiede il corpus caricato). */
   get generator(): ExerciseGenerator {
-    const k = this.settings.deadKeys;
-    let g = this.generators.get(k);
-    if (!g) this.generators.set(k, (g = new ExerciseGenerator(this.corpus, this.resolver)));
+    const lang = this.settings.exerciseLang;
+    const key = `${lang}|${profileId(this.profile)}|${this.settings.deadKeys}`;
+    let g = this.generators.get(key);
+    if (!g) this.generators.set(key, (g = new ExerciseGenerator(this.corpora[lang]!, this.resolver, lang)));
     return g;
+  }
+
+  private async loadCorpus(lang: Lang) {
+    if (this.corpora[lang]) return;
+    const v = __CORPUS_VERSION__[lang];
+    const [words, sentences] = await Promise.all([
+      fetch(`./corpus/${lang}/words.json?v=${v}`).then((r) => r.json()),
+      fetch(`./corpus/${lang}/sentences.json?v=${v}`).then((r) => r.json()),
+    ]);
+    this.corpora[lang] = { words: words.words, sentences: sentences.sentences };
   }
 
   async init() {
     try {
-      const [store, words, sentences] = await Promise.all([
-        TrainerStore.open(),
-        fetch(`./corpus/words.json?v=${__CORPUS_VERSION__}`).then((r) => r.json()),
-        fetch(`./corpus/sentences.json?v=${__CORPUS_VERSION__}`).then((r) => r.json()),
-      ]);
+      const store = await TrainerStore.open();
       this.store = store;
-      this.engine = new SyncEngine(this.api, store, () => this.resolver);
-      this.corpus = { words: words.words, sentences: sentences.sentences };
-      this.settings = await store.getSettings();
+      this.engine = new SyncEngine(this.api, store);
+      // utente nuovo: lingue dalla lingua del browser
+      const lang = detectLanguage(navigator.languages ?? [navigator.language]);
+      const fresh = !(await store.hasSettings());
+      this.settings = await store.getSettings(fresh ? { ...DEFAULT_SETTINGS, uiLang: lang, exerciseLang: lang } : DEFAULT_SETTINGS);
+      i18n.lang = this.settings.uiLang;
+      await this.loadCorpus(this.settings.exerciseLang);
+      this.corpusReady = true;
       await this.refresh();
       this.interrupted = await store.findInProgress();
       this.ready = true;
@@ -104,7 +134,7 @@ class AppState {
   }
 
   async refresh() {
-    this.stats = await this.store.getStats();
+    this.stats = await this.store.getStats(this.profile);
     this.sessions = await this.store.listSessions();
     const meta = await this.store.getSync();
     this.account.pending = meta.pending.length;
@@ -127,13 +157,13 @@ class AppState {
       this.account.offline = false;
       this.account.error = null;
       this.account.localOnly += r.localOnly;
-      if (r.settingsChanged) this.settings = await this.store.getSettings();
+      if (r.settingsChanged) await this.applySettings(await this.store.getSettings());
     } catch (e) {
       if (e instanceof OfflineError) this.account.offline = true;
       else if (e instanceof UnauthorizedError) {
         // sessione del browser scaduta o revocata: i dati locali restano, si rientra con un nuovo accesso
         this.account.user = null;
-        this.account.error = 'Sessione scaduta: accedi di nuovo per sincronizzare.';
+        this.account.error = t('account.expired');
       } else this.account.error = e instanceof Error ? e.message : String(e);
     } finally {
       this.account.syncing = false;
@@ -147,7 +177,7 @@ class AppState {
     await this.store.reset();
     this.account.user = null;
     this.account.localOnly = 0;
-    this.settings = await this.store.getSettings();
+    await this.applySettings(await this.store.getSettings());
     await this.refresh();
   }
 
@@ -155,15 +185,15 @@ class AppState {
   async resetAll() {
     if (this.account.user) await this.engine.wipeAccount(this.account.user);
     else await this.store.reset();
-    this.settings = await this.store.getSettings();
+    await this.applySettings(await this.store.getSettings());
     await this.refresh();
   }
 
   /** Importazione: con accesso sostituisce anche l'account. */
   async importFile(data: ExportData) {
     if (this.account.user) await this.engine.importIntoAccount(data, this.account.user);
-    else await this.store.importData(data, this.resolver);
-    this.settings = await this.store.getSettings();
+    else await this.store.importData(data);
+    await this.applySettings(await this.store.getSettings());
     await this.refresh();
   }
 
@@ -172,9 +202,26 @@ class AppState {
     await this.syncNow();
   }
 
+  /** Applica impostazioni arrivate da fuori (sincronizzazione, importazione, azzeramento). */
+  private async applySettings(s: Settings) {
+    const before = profileId(this.profile);
+    this.settings = s;
+    i18n.lang = s.uiLang;
+    await this.loadCorpus(s.exerciseLang);
+    if (profileId(this.profile) !== before) this.focus = null;
+  }
+
   async saveSettings(patch: Partial<Settings>) {
+    const before = profileId(this.profile);
+    if (patch.exerciseLang) await this.loadCorpus(patch.exerciseLang);
     this.settings = { ...this.settings, ...patch };
+    i18n.lang = this.settings.uiLang;
     await this.store.saveSettings($state.snapshot(this.settings));
+    // un altro profilo ha altre statistiche (e un allenamento mirato non ha più senso)
+    if (profileId(this.profile) !== before) {
+      this.focus = null;
+      await this.refresh();
+    }
     if (this.account.user) {
       // più modifiche ravvicinate (es. cursori) in una sola sincronizzazione
       if (this.settingsTimer) clearTimeout(this.settingsTimer);
@@ -183,7 +230,7 @@ class AppState {
   }
 
   async resolveInterrupted(s: StoredSession, keep: boolean) {
-    if (keep && s.samples.length > 0) await this.store.completeSession(s, clavisResolver({ deadKeys: s.deadKeys }));
+    if (keep && s.samples.length > 0) await this.store.completeSession(s);
     else await this.store.discardSession(s.id);
     this.interrupted = this.interrupted.filter((x) => x.id !== s.id);
     await this.afterSession();

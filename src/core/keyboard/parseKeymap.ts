@@ -1,19 +1,25 @@
 import type { KeyAction, Keymap, LayerName, Modifier } from './types';
+import type { Code } from './osmaps';
 
-/** Keycode ZMK → [carattere, carattere con Shift] secondo il layout US. */
-const KEYCODES: Record<string, [string, string?]> = {
-  N1: ['1', '!'], N2: ['2', '@'], N3: ['3', '#'], N4: ['4', '$'], N5: ['5', '%'],
-  N6: ['6', '^'], N7: ['7', '&'], N8: ['8', '*'], N9: ['9', '('], N0: ['0', ')'],
-  KP_N0: ['0'], KP_N1: ['1'], KP_N2: ['2'], KP_N3: ['3'], KP_N4: ['4'],
-  KP_N5: ['5'], KP_N6: ['6'], KP_N7: ['7'], KP_N8: ['8'], KP_N9: ['9'],
-  KP_DOT: ['.'], KP_MINUS: ['-'], KP_PLUS: ['+'],
-  SEMI: [';', ':'], SQT: ["'", '"'], DQT: ['"'], GRAVE: ['`', '~'],
-  BSLH: ['\\', '|'], COMMA: [',', '<'], DOT: ['.', '>'], SLASH: ['/', '?'],
-  MINUS: ['-', '_'], EQUAL: ['=', '+'], LBKT: ['[', '{'], RBKT: [']', '}'],
-  LBRC: ['{'], RBRC: ['}'], LPAR: ['('], RPAR: [')'], AMPS: ['&'], ASTRK: ['*'],
-  COLON: [':'], DLLR: ['$'], PRCNT: ['%'], CARET: ['^'], PLUS: ['+'],
-  TILDE: ['~'], EXCL: ['!'], AT: ['@'], HASH: ['#'], PIPE: ['|'], UNDER: ['_'],
-  SPACE: [' '], RET: ['\n'], TAB: ['\t'],
+/**
+ * Keycode ZMK → keycode fisico (nomi di `KeyboardEvent.code`) e Shift implicito.
+ * I caratteri si ricavano poi con la mappa del sistema operativo: lo stesso
+ * `&kp LPAR` dà `(` con il sistema in US e `)` con quello italiano.
+ */
+const KEYCODES: Record<string, [Code, boolean?]> = {
+  N1: ['Digit1'], N2: ['Digit2'], N3: ['Digit3'], N4: ['Digit4'], N5: ['Digit5'],
+  N6: ['Digit6'], N7: ['Digit7'], N8: ['Digit8'], N9: ['Digit9'], N0: ['Digit0'],
+  KP_N0: ['Numpad0'], KP_N1: ['Numpad1'], KP_N2: ['Numpad2'], KP_N3: ['Numpad3'], KP_N4: ['Numpad4'],
+  KP_N5: ['Numpad5'], KP_N6: ['Numpad6'], KP_N7: ['Numpad7'], KP_N8: ['Numpad8'], KP_N9: ['Numpad9'],
+  KP_DOT: ['NumpadDecimal'], KP_MINUS: ['NumpadSubtract'], KP_PLUS: ['NumpadAdd'],
+  SEMI: ['Semicolon'], SQT: ['Quote'], DQT: ['Quote', true], GRAVE: ['Backquote'], TILDE: ['Backquote', true],
+  BSLH: ['Backslash'], PIPE: ['Backslash', true], COMMA: ['Comma'], DOT: ['Period'], SLASH: ['Slash'],
+  MINUS: ['Minus'], UNDER: ['Minus', true], EQUAL: ['Equal'], PLUS: ['Equal', true],
+  LBKT: ['BracketLeft'], RBKT: ['BracketRight'], LBRC: ['BracketLeft', true], RBRC: ['BracketRight', true],
+  LPAR: ['Digit9', true], RPAR: ['Digit0', true], AMPS: ['Digit7', true], ASTRK: ['Digit8', true],
+  COLON: ['Semicolon', true], DLLR: ['Digit4', true], PRCNT: ['Digit5', true], CARET: ['Digit6', true],
+  EXCL: ['Digit1', true], AT: ['Digit2', true], HASH: ['Digit3', true],
+  SPACE: ['Space'], RET: ['Enter'], TAB: ['Tab'], BSPC: ['Backspace'], DEL: ['Delete'], ESC: ['Escape'],
 };
 
 const LABELS: Record<string, string> = {
@@ -22,15 +28,17 @@ const LABELS: Record<string, string> = {
 
 const MODS: Record<string, Modifier> = {
   LSHFT: 'shift', RSHFT: 'shift', LCTRL: 'ctrl', RCTRL: 'ctrl',
-  LALT: 'alt', RALT: 'alt', LGUI: 'gui', RGUI: 'gui',
+  LALT: 'alt', RALT: 'altgr', LGUI: 'gui', RGUI: 'gui',
 };
 
-function keycodeAction(code: string): Pick<KeyAction, 'tap' | 'shiftTap' | 'label' | 'holdMod'> {
-  if (/^[A-Z]$/.test(code)) return { tap: code.toLowerCase(), shiftTap: code, label: code.toLowerCase() };
+const MOD_LABELS: Record<Modifier, string> = { shift: '⇧', ctrl: 'ctrl', alt: 'alt', gui: 'gui', altgr: 'AltGr' };
+
+function keycodeAction(code: string): Pick<KeyAction, 'code' | 'shift' | 'label' | 'holdMod'> {
+  if (/^[A-Z]$/.test(code)) return { code: `Key${code}`, label: code.toLowerCase() };
   const mod = MODS[code];
-  if (mod) return { holdMod: mod, label: mod === 'shift' ? '⇧' : mod };
+  if (mod) return { holdMod: mod, label: MOD_LABELS[mod] };
   const k = KEYCODES[code];
-  if (k) return { tap: k[0], shiftTap: k[1], label: LABELS[code] ?? k[0] };
+  if (k) return { code: k[0], ...(k[1] ? { shift: true } : {}), label: LABELS[code] ?? '' };
   return { label: LABELS[code] ?? code.toLowerCase() };
 }
 

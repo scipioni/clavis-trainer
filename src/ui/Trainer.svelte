@@ -8,19 +8,21 @@
   import { normalizeText } from '../core/exercise/normalize';
   import type { Chord } from '../core/keyboard';
   import type { ExerciseMode, StoredSession } from '../storage/db';
+  import ProfilePicker from './ProfilePicker.svelte';
   import { showChar, unitLabel } from './labels';
+  import { t } from '../i18n/index.svelte';
 
-  const DURATIONS: { label: string; sec: number | null }[] = [
+  const DURATIONS = $derived<{ label: string; sec: number | null }[]>([
     { label: '30 s', sec: 30 },
     { label: '60 s', sec: 60 },
     { label: '120 s', sec: 120 },
-    { label: 'fino alla fine', sec: null },
-  ];
-  const MODES: { id: ExerciseMode; label: string }[] = [
-    { id: 'adaptive', label: 'Adattivo' },
-    { id: 'sentences', label: 'Frasi' },
-    { id: 'free', label: 'Testo libero' },
-  ];
+    { label: t('train.untilEnd'), sec: null },
+  ]);
+  const MODES = $derived<{ id: ExerciseMode; label: string }[]>([
+    { id: 'adaptive', label: t('train.mode.adaptive') },
+    { id: 'sentences', label: t('train.mode.sentences') },
+    { id: 'free', label: t('train.mode.free') },
+  ]);
 
   let session = $state.raw<TypingSession | null>(null);
   /** Contatore per far ridisegnare la vista dopo ogni evento (la sessione non è reattiva). */
@@ -42,7 +44,7 @@
     const focus = app.focus ?? undefined;
     if (s.mode === 'free') {
       const { text, removed } = normalizeText(freeText, app.resolver);
-      notice = removed > 0 ? `Tolti ${removed} caratteri non digitabili su clavis.` : null;
+      notice = removed > 0 ? t('train.removed', removed) : null;
       return text;
     }
     notice = null;
@@ -65,7 +67,7 @@
     result = null;
     const text = generate();
     if (!text) {
-      notice = 'Il testo è vuoto: incolla qualcosa da digitare.';
+      notice = t('train.emptyText');
       session = null;
       return;
     }
@@ -96,6 +98,9 @@
       durationMs: s.options.durationMs,
       status: 'in-progress',
       deadKeys: app.settings.deadKeys,
+      keyboard: app.settings.keyboard,
+      layout: app.settings.layout,
+      lang: app.settings.exerciseLang,
       focus: app.focus ?? undefined,
       samples: [],
       result: computeResult([], 0),
@@ -127,7 +132,7 @@
     stop();
     const record = { ...snapshot(s), status: 'completed' as const };
     result = record.result;
-    await app.store.completeSession(record, app.resolver);
+    await app.store.completeSession(record);
     app.focus = null;
     await app.afterSession(); // aggiorna e, con l'accesso, invia la sessione all'account
   }
@@ -137,7 +142,7 @@
     if (stored) await app.store.discardSession(stored.id);
     stored = null;
     session = null;
-    notice = 'Sessione abbandonata: non è stata salvata.';
+    notice = t('train.abandoned');
   }
 
   /** Legge ciò che il campo nascosto ha ricevuto e lo passa alla sessione. */
@@ -243,12 +248,12 @@
 
 <section class="trainer">
   <div class="toolbar">
-    <div class="group" role="group" aria-label="Modalità">
+    <div class="group" role="group" aria-label={t('train.mode')}>
       {#each MODES as m (m.id)}
         <button class:active={app.settings.mode === m.id} onclick={() => chooseMode(m.id)}>{m.label}</button>
       {/each}
     </div>
-    <div class="group" role="group" aria-label="Durata">
+    <div class="group" role="group" aria-label={t('train.duration')}>
       {#each DURATIONS as d (d.label)}
         <button class:active={app.settings.durationSec === d.sec} onclick={() => chooseDuration(d.sec)}>{d.label}</button>
       {/each}
@@ -259,19 +264,22 @@
         checked={app.settings.showKeyboard}
         onchange={(e) => app.saveSettings({ showKeyboard: e.currentTarget.checked })}
       />
-      tastiera
+      {t('train.keyboardToggle')}
     </label>
   </div>
+  {#if !view || view.s.status === 'ready' || result}
+    <ProfilePicker compact />
+  {/if}
 
   {#if app.focus}
     <p class="focus">
-      Allenamento mirato su <strong>{unitLabel(app.focus)}</strong>
-      <button class="link" onclick={() => { app.focus = null; session = null; }}>annulla</button>
+      {t('train.focus')} <strong>{unitLabel(app.focus)}</strong>
+      <button class="link" onclick={() => { app.focus = null; session = null; }}>{t('train.focusCancel')}</button>
     </p>
   {/if}
 
   {#if app.settings.mode === 'free' && !view}
-    <textarea class="free" bind:value={freeText} placeholder="Incolla qui il testo da digitare…" rows="6"></textarea>
+    <textarea class="free" bind:value={freeText} placeholder={t('train.freePlaceholder')} rows="6"></textarea>
   {/if}
 
   {#if notice}<p class="notice">{notice}</p>{/if}
@@ -280,12 +288,12 @@
     <Results {result} onAgain={prepare} />
   {:else if view}
     <div class="live">
-      <span>{view.s.status === 'ready' ? 'Comincia a scrivere' : view.s.status === 'paused' ? 'In pausa' : ''}</span>
+      <span>{view.s.status === 'ready' ? t('train.start') : view.s.status === 'paused' ? t('train.paused') : ''}</span>
       <span class="num">{Math.round(view.liveWpm)} WPM</span>
       <span class="num">
         {#if view.remaining !== null}{Math.ceil(view.remaining / 1000)} s{:else}{Math.floor(view.elapsed / 1000)} s{/if}
       </span>
-      <button class="link" onclick={() => send({ type: 'abort', t: performance.now() })}>abbandona (Esc)</button>
+      <button class="link" onclick={() => send({ type: 'abort', t: performance.now() })}>{t('train.abort')}</button>
     </div>
 
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
@@ -311,19 +319,19 @@
       autocomplete="off"
       autocapitalize="off"
       spellcheck="false"
-      aria-label="Campo di digitazione"
+      aria-label={t('train.typingField')}
     ></textarea>
     {#if view.s.currentWrong !== null}
-      <p class="hint">Hai scritto <code>{showChar(view.s.currentWrong)}</code>, atteso <code>{showChar(view.s.expected ?? '')}</code></p>
+      <p class="hint">{t('train.wrong', showChar(view.s.currentWrong), showChar(view.s.expected ?? ''))}</p>
     {/if}
 
     {#if app.settings.showKeyboard && view.stroke}
-      <Keyboard layer={view.stroke.layer} tap={view.stroke.tap.pos} holds={view.stroke.holds.map((h) => h.pos)} />
+      <Keyboard resolver={app.resolver} layer={view.stroke.layer} tap={view.stroke.tap.pos} holds={view.stroke.holds.map((h) => h.pos)} />
     {/if}
   {:else}
     <div class="start">
-      <button class="primary" onclick={prepare}>Prepara la sessione</button>
-      <p class="muted">Poi comincia a scrivere: il tempo parte al primo carattere.</p>
+      <button class="primary" onclick={prepare} disabled={!app.corpusReady}>{t('train.prepare')}</button>
+      <p class="muted">{t('train.prepareHint')}</p>
     </div>
   {/if}
 </section>

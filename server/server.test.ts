@@ -12,8 +12,8 @@ import type { Sample } from '../src/core/session/session';
 import { DEFAULT_SETTINGS, type StoredSession } from '../src/core/data';
 
 const SITE = 'https://clavis.example';
-const ALICE = { id: 111, first_name: 'Alice', username: 'alice' };
-const BOB = { id: 222, first_name: 'Bob' };
+const ALICE = { id: 111, first_name: 'Alice', username: 'alice', language_code: 'it' };
+const BOB = { id: 222, first_name: 'Bob', language_code: 'en-GB' };
 
 function session(id: string, startedAt = 1000): StoredSession {
   const samples: Sample[] = Array.from({ length: 5 }, (_, i) => ({
@@ -109,12 +109,33 @@ describe('database', () => {
 });
 
 describe('bot', () => {
-  test('presentazione: nome e descrizioni impostati una volta sola', async () => {
+  test('presentazione: inglese predefinito e italiano per it, impostati una volta sola', async () => {
     await bot.present();
     await bot.present();
-    expect(tg.sent('setMyName')).toHaveLength(1);
-    expect(tg.sent('setMyDescription')).toHaveLength(1);
-    expect(tg.sent('setMyCommands')).toHaveLength(2);
+    expect(tg.sent('setMyName')).toHaveLength(2); // predefinito + it
+    expect(tg.sent('setMyDescription')).toHaveLength(2);
+    expect(tg.sent('setMyCommands')).toHaveLength(4);
+    expect(tg.profile['description|']).toContain('Sign-in bot');
+    expect(tg.profile['description|it']).toContain('Bot di accesso');
+    expect(tg.profile['short_description|']).toContain('Sign in');
+  });
+
+  test('utente con Telegram in inglese: codice e pulsanti in inglese', async () => {
+    const start = await (await call('POST', '/api/auth/start')).json();
+    await telegramUser(start.id, BOB, null);
+    const sent = tg.sent('sendMessage')[0];
+    expect(String(sent.text)).toContain(`Code: ${start.code}`);
+    expect(JSON.stringify(sent.reply_markup)).toContain('Confirm');
+    expect(JSON.stringify(sent.reply_markup)).toContain('Cancel');
+    tg.push({ callback_query: { id: 'q', from: BOB, data: `ok:${start.id}`, message: { message_id: 100, chat: { id: BOB.id } } } });
+    await bot.pollOnce(0);
+    expect(String(tg.sent('editMessageText').at(-1)!.text)).toContain('Sign-in confirmed');
+  });
+
+  test('/start senza codice in inglese', async () => {
+    tg.push({ message: { message_id: 1, chat: { id: 5 }, from: BOB, text: '/start' } });
+    await bot.pollOnce(0);
+    expect(String(tg.sent('sendMessage')[0].text)).toContain('This bot is used to sign in');
   });
 
   test('/start senza codice: istruzioni con il link al sito', async () => {
@@ -160,7 +181,7 @@ describe('accesso', () => {
     expect(sc).toContain('SameSite=Lax');
     expect(sc).toContain('Max-Age=15552000');
     const me = await (await call('GET', '/api/me', { cookie: cookieFrom(res) })).json();
-    expect(me.user).toEqual(ALICE);
+    expect(me.user).toEqual({ id: ALICE.id, first_name: ALICE.first_name, username: ALICE.username });
     // il DB contiene solo l'impronta del token
     expect(db.getAuth(cookieFrom(res)!)).toBeNull();
   });
@@ -288,6 +309,33 @@ describe('sincronizzazione', () => {
     const res = await sync(c, { upload: [session('ok'), bad], cursor: 0 });
     expect(res.status).toBe(422);
     expect((await (await sync(c, { upload: [], cursor: 0 })).json()).sessions).toEqual([]);
+  });
+
+  test('sessione di una versione precedente (senza profilo) accettata', async () => {
+    const c = await login();
+    const legacy = session('vecchia');
+    const withProfile = { ...session('nuova'), keyboard: 'iso', layout: 'it', lang: 'en' };
+    const r = await (await sync(c, { upload: [legacy, withProfile], cursor: 0 })).json();
+    expect(r.accepted).toBe(2);
+    const byId = Object.fromEntries(r.sessions.map((s: StoredSession) => [s.id, s]));
+    expect(byId.vecchia.keyboard).toBeUndefined();
+    expect(byId.nuova).toMatchObject({ keyboard: 'iso', layout: 'it', lang: 'en' });
+  });
+
+  test('profilo sconosciuto: 422 e account invariato', async () => {
+    const c = await login();
+    const res = await sync(c, { upload: [{ ...session('x'), layout: 'dvorak' }], cursor: 0 });
+    expect(res.status).toBe(422);
+    expect((await (await sync(c, { upload: [], cursor: 0 })).json()).sessions).toEqual([]);
+  });
+
+  test('impostazioni con profilo e lingue', async () => {
+    const c = await login();
+    const value = { ...DEFAULT_SETTINGS, keyboard: 'ansi', layout: 'us', uiLang: 'en', exerciseLang: 'en' };
+    const r = await (await sync(c, { upload: [], cursor: 0, settings: { value, updatedAt: 10 } })).json();
+    expect(r.settings.value).toMatchObject({ keyboard: 'ansi', layout: 'us', uiLang: 'en' });
+    const bad = await sync(c, { upload: [], cursor: 0, settings: { value: { ...value, uiLang: 'de' }, updatedAt: 20 } });
+    expect(bad.status).toBe(422);
   });
 
   test('troppe sessioni in una richiesta: 413', async () => {

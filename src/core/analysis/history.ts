@@ -1,6 +1,6 @@
 import type { SessionResult } from '../session/result';
-import type { Keymap, LayerName } from '../keyboard/types';
-import { keyGeometry } from '../keyboard/geometry';
+import type { LayerName } from '../keyboard/types';
+import type { Resolver } from '../keyboard/resolver';
 import type { StatsTable } from './stats';
 
 export interface HistoryEntry {
@@ -69,13 +69,23 @@ export interface Heat {
   /** 0..1 per posizione, null = nessun dato (tasto neutro). */
   values: (number | null)[];
   titles: (string | null)[];
+  /** Carattere prodotto da ogni tasto sul layer (null = nessuno). */
+  chars: (string | null)[];
+}
+
+/** Carattere che il tasto produce al livello normale (o con lo Shift implicito). */
+export function keyChar(resolver: Resolver, layer: LayerName, pos: number): string | null {
+  const a = resolver.board.actions[layer]?.[pos];
+  if (!a?.code || a.absent || !resolver.board.keys[pos].present) return null;
+  return resolver.os.keys[a.code]?.[a.shift ? 1 : 0] ?? null;
 }
 
 /** Valori della mappa di calore per i caratteri che ogni tasto produce sul layer scelto. */
-export function heatmap(table: StatsTable, keymap: Keymap, layer: LayerName, metric: HeatMetric): Heat {
-  const raw: (number | null)[] = keymap.layers[layer].map((k, pos) => {
-    if (!k.tap || !keyGeometry(pos).present) return null;
-    const s = table[`char:${k.tap}`];
+export function heatmap(table: StatsTable, resolver: Resolver, layer: LayerName, metric: HeatMetric): Heat {
+  const n = resolver.board.keys.length;
+  const chars = Array.from({ length: n }, (_, pos) => keyChar(resolver, layer, pos));
+  const raw: (number | null)[] = chars.map((c) => {
+    const s = c ? table[`char:${c}`] : undefined;
     if (!s) return null;
     return metric === 'time' ? s.emaMs : s.emaErr;
   });
@@ -83,11 +93,12 @@ export function heatmap(table: StatsTable, keymap: Keymap, layer: LayerName, met
   const lo = Math.min(...vals);
   const hi = Math.max(...vals);
   const values = raw.map((v) => (v === null ? null : hi - lo < 1e-9 ? 0.5 : (v - lo) / (hi - lo)));
-  const titles = keymap.layers[layer].map((k) => {
-    const s = k.tap ? table[`char:${k.tap}`] : undefined;
-    if (!s) return k.tap ? `${k.tap}: nessun dato` : null;
+  const titles = chars.map((c) => {
+    if (!c) return null;
+    const s = table[`char:${c}`];
+    if (!s) return `${c}: nessun dato`;
     const t = s.emaMs === null ? '–' : `${Math.round(s.emaMs)} ms`;
-    return `${k.tap === ' ' ? 'spazio' : k.tap}: ${t}, errori ${(s.emaErr * 100).toFixed(1)}%, ${s.n} campioni`;
+    return `${c === ' ' ? 'spazio' : c}: ${t}, errori ${(s.emaErr * 100).toFixed(1)}%, ${s.n} campioni`;
   });
-  return { values, titles };
+  return { values, titles, chars };
 }

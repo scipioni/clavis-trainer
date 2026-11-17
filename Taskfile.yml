@@ -21,12 +21,13 @@ tasks:
       - docker run -d --name clavis-trainer-local -p 8088:8080 -e TELEGRAM_FAKE=1 -e COOKIE_SECURE=0 -e PUBLIC_URL=http://localhost:8088 {{.IMAGE}}:latest
 
   e2e:
-    desc: Smoke test e test dell'account (bot finto) contro l'immagine locale (porta 8088)
+    desc: Smoke test, account (bot finto) e profili contro l'immagine locale (porta 8088)
     deps: [docker:run]
     cmds:
       - sleep 2
       - bun tests/e2e/smoke.ts http://localhost:8088/
       - bun tests/e2e/account.ts http://localhost:8088/
+      - bun tests/e2e/profiles.ts http://localhost:8088/
 
   docker:publish:
     desc: Rilascio manuale su Docker Hub (sha-<commit> e latest); di norma lo fa la CI

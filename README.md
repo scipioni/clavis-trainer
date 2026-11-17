@@ -1,9 +1,10 @@
 # clavis-trainer
 
 A typing trainer for the [clavis](https://github.com/scipioni/clavis) split
-keyboard (36 keys, Miryoku Colemak-DH with home row mods), used with the
-system layout set to US International with dead keys. Adaptive drills that
-target your weak spots, real Italian text, and statistics over time. Training
+keyboard (36 keys, Miryoku Colemak-DH with home row mods) and for standard
+ANSI and ISO keyboards, with Colemak-DH, US QWERTY or Italian QWERTY layouts.
+Adaptive drills that target your weak spots, real Italian or English text, and
+statistics over time, kept separately for each keyboard and layout. Training
 runs entirely in the browser (IndexedDB); signing in with Telegram is optional
 and makes your history follow you across devices.
 
@@ -29,7 +30,35 @@ and makes your history follow you across devices.
   synced between your devices; history recorded before signing in is merged
   into the account.
 
-The interface is in Italian.
+- **Profiles**: keyboard (clavis, standard ANSI, standard ISO) and layout
+  (Colemak-DH, US QWERTY, Italian QWERTY) are chosen independently. Each
+  combination has its own statistics, and the app lists the characters the
+  profile cannot type (for example `È` with the Italian layout).
+- **Two languages**: the interface is in Italian or English (from the browser
+  language at first, then a setting), and the exercise language is chosen
+  separately.
+
+### Profiles and layouts
+
+Characters are resolved through keycodes: each physical key emits a keycode
+(`KeyboardEvent.code` names) and an operating system map turns keycodes into
+characters at four levels (plain, Shift, AltGr, AltGr+Shift). The same clavis
+keymap therefore works with the system set to US or Italian.
+
+| Keyboard | Layout | Keys | System map |
+|---|---|---|---|
+| clavis | Colemak-DH | firmware (Colemak-DH base) | US / US International |
+| clavis | US QWERTY | firmware with the Miryoku QWERTY base | US / US International |
+| clavis | Italian QWERTY | firmware with the Miryoku QWERTY base | Italian |
+| ANSI / ISO | Colemak-DH | standard positions | Colemak-DH with angle mod |
+| ANSI / ISO | US QWERTY | standard positions | US / US International |
+| ANSI / ISO | Italian QWERTY | standard positions | Italian |
+
+System maps are in `src/core/keyboard/osmaps.ts` (from the XKB `us`,
+`us(colemak_dh)`, `us(colemak_dh_iso)` and `it` files), keyboards in
+`src/core/keyboard/boards.ts`. The Italian map follows Linux: on Windows `` ` ``
+and `~` are not available. With clavis + QWERTY the firmware has no `;` key,
+so `;` (and `ò` with the Italian layout) cannot be typed.
 
 ## Commands
 
@@ -41,7 +70,7 @@ bun run preview      # serve dist/
 bun run server       # API and bot on :8080 (Vite proxies /api to it)
 bun run test         # client unit tests (Vitest)
 bun run test:server  # server tests (bun test)
-bun run check        # type checking (svelte-check + tsc for server/)
+bun run check        # type checking (svelte-check + tsc for server/) and untranslated UI text
 ```
 
 The server (`server/`) is a single Bun process: static files, the JSON API under
@@ -72,11 +101,22 @@ International dead key compositions are in `src/core/keyboard/deadKeys.ts`.
 
 ## Corpus
 
-Words (FrequencyWords, CC BY-SA 4.0) and sentences (Tatoeba, CC BY 2.0 FR) are
-already in `public/corpus/`. To regenerate them, run `bun run build:corpus`. It
-downloads the sources into `.corpus-raw/` and needs `bunzip2`. Words to exclude
-are listed in `scripts/corpus-exclude.txt`. Sources and licenses:
+Words (FrequencyWords, CC BY-SA 4.0) and sentences (Tatoeba, CC BY 2.0 FR) for
+Italian and English are already in `public/corpus/it/` and `public/corpus/en/`.
+To regenerate them, run `bun run build:corpus` (or `bun run build:corpus it|en`).
+It downloads the sources into `.corpus-raw/` and needs `bunzip2`. Words to
+exclude are listed in `scripts/corpus-exclude-it.txt` and
+`scripts/corpus-exclude-en.txt`. FrequencyWords splits English contractions
+(`don't` → `don` + `t`): the script drops the fragments and rebuilds the
+contractions from the Tatoeba sentences. Sources and licenses:
 [ATTRIBUTION.md](ATTRIBUTION.md).
+
+## Interface languages
+
+All UI text goes through `t()` (`src/i18n/`): `it.ts` is the reference catalog,
+`en.ts` must have the same keys (checked by the type system and by a unit
+test). `bun scripts/check-i18n.ts` (part of `bun run check`) fails if a
+component contains visible text outside the catalog.
 
 ## UI tests
 
@@ -99,8 +139,15 @@ following the account, anonymous history merged on sign-in, sign-out.
 ```sh
 task server:e2e &                 # server with the fake bot on :8099
 bun tests/e2e/account.ts http://localhost:8099/
-task e2e                          # both suites against the local Docker image
+bun tests/e2e/profiles.ts http://localhost:8099/
+task e2e                          # all suites against the local Docker image
 ```
+
+`tests/e2e/profiles.ts` starts with an English browser (interface and exercises
+in English), switches the interface language without reloading, draws the
+three keyboards with the Italian layout (screenshots in `tests/e2e/out/`),
+checks the unreachable-character warning and that two profiles keep separate
+statistics.
 
 They do not replace testing with a real clavis: dead key composition and home
 row mods depend on the operating system and the firmware.
@@ -158,6 +205,14 @@ link plus a code that the user confirms in the bot.
 Accounts and history live in `~/clavis-trainer/data/clavis.db` (SQLite, WAL)
 on cubo. Include that directory in cubo's backups; for a consistent copy while
 the app runs use `sqlite3 data/clavis.db ".backup /path/clavis.db"`.
+
+**Rolling back the client**
+
+Since the profiles release the browser database is IndexedDB version 2
+(statistics per profile). An older build cannot open a version 2 database, so
+after rolling back to `sha-fb5b74f` or earlier users must clear the site data;
+history comes back from the account (if signed in) or from a JSON export.
+Server data needs no migration in either direction.
 
 **Commands** ([Task](https://taskfile.dev))
 

@@ -80,7 +80,7 @@ class FakeServer {
 
 async function device(server: FakeServer, user: AccountUser) {
   const store = await TrainerStore.open(`dev-${++n}`);
-  const engine = new SyncEngine(server.apiFor(user), store, () => resolver);
+  const engine = new SyncEngine(server.apiFor(user), store);
   return { store, engine };
 }
 
@@ -89,7 +89,7 @@ describe('sincronizzazione', () => {
     const server = new FakeServer();
     const laptop = await device(server, ALICE);
     await laptop.engine.bindAccount(ALICE);
-    for (let i = 0; i < 20; i++) await laptop.store.completeSession(session(`s${i}`, 1000 + i), resolver);
+    for (let i = 0; i < 20; i++) await laptop.store.completeSession(session(`s${i}`, 1000 + i));
     await laptop.engine.sync();
     expect(server.count(ALICE)).toBe(20);
 
@@ -108,7 +108,7 @@ describe('sincronizzazione', () => {
     await a.engine.bindAccount(ALICE);
     await b.engine.bindAccount(ALICE);
     await b.engine.sync();
-    await a.store.completeSession(session('nuova', 5000), resolver);
+    await a.store.completeSession(session('nuova', 5000));
     await a.engine.sync();
     expect((await b.engine.sync()).downloaded).toBe(1);
     expect((await b.store.listSessions()).map((s) => s.id)).toEqual(['nuova']);
@@ -118,7 +118,7 @@ describe('sincronizzazione', () => {
     const server = new FakeServer();
     const d = await device(server, ALICE);
     await d.engine.bindAccount(ALICE);
-    await d.store.completeSession(session('a', 1), resolver);
+    await d.store.completeSession(session('a', 1));
     server.failAfterApply = 1;
     await expect(d.engine.sync()).rejects.toThrow(OfflineError);
     expect((await d.store.getSync()).pending).toEqual(['a']);
@@ -132,8 +132,8 @@ describe('sincronizzazione', () => {
     const d = await device(server, ALICE);
     await d.engine.bindAccount(ALICE);
     server.offline = true;
-    await d.store.completeSession(session('a', 1), resolver);
-    await d.store.completeSession(session('b', 2), resolver);
+    await d.store.completeSession(session('a', 1));
+    await d.store.completeSession(session('b', 2));
     await expect(d.engine.sync()).rejects.toThrow(OfflineError);
     expect((await d.store.getSync()).pending).toHaveLength(2);
     server.offline = false;
@@ -145,11 +145,11 @@ describe('sincronizzazione', () => {
     const server = new FakeServer();
     const other = await device(server, ALICE);
     await other.engine.bindAccount(ALICE);
-    for (let i = 0; i < 10; i++) await other.store.completeSession(session(`acc${i}`, 100 + i), resolver);
+    for (let i = 0; i < 10; i++) await other.store.completeSession(session(`acc${i}`, 100 + i));
     await other.engine.sync();
 
     const anon = await device(server, ALICE);
-    for (let i = 0; i < 5; i++) await anon.store.completeSession(session(`anon${i}`, 200 + i), resolver);
+    for (let i = 0; i < 5; i++) await anon.store.completeSession(session(`anon${i}`, 200 + i));
     await anon.engine.bindAccount(ALICE);
     await anon.engine.sync();
     expect(server.count(ALICE)).toBe(15);
@@ -159,7 +159,7 @@ describe('sincronizzazione', () => {
   test('sessioni di prima della sincronizzazione (senza pending) salgono comunque', async () => {
     const server = new FakeServer();
     const d = await device(server, ALICE);
-    await d.store.completeSession(session('vecchia', 1), resolver);
+    await d.store.completeSession(session('vecchia', 1));
     await d.store.patchSync({ pending: [] }); // come un browser della versione precedente
     await d.engine.bindAccount(ALICE);
     await d.engine.sync();
@@ -170,9 +170,9 @@ describe('sincronizzazione', () => {
     const server = new FakeServer();
     const d = await device(server, ALICE);
     await d.engine.bindAccount(ALICE);
-    await d.store.completeSession(session('di-alice', 1), resolver);
+    await d.store.completeSession(session('di-alice', 1));
     await d.engine.sync();
-    const asBob = new SyncEngine(server.apiFor(BOB), d.store, () => resolver);
+    const asBob = new SyncEngine(server.apiFor(BOB), d.store);
     await asBob.bindAccount(BOB);
     await asBob.sync();
     expect(await d.store.listSessions()).toEqual([]);
@@ -184,7 +184,7 @@ describe('sincronizzazione', () => {
     const server = new FakeServer();
     const d = await device(server, ALICE);
     await d.engine.bindAccount(ALICE);
-    for (let i = 0; i < 120; i++) await d.store.completeSession(session(`s${i}`, i, 'ab'), resolver);
+    for (let i = 0; i < 120; i++) await d.store.completeSession(session(`s${i}`, i, 'ab'));
     await d.engine.sync();
     expect(server.requests.map((r) => r.upload.length)).toEqual([50, 50, 20]);
     expect(server.count(ALICE)).toBe(120);
@@ -212,8 +212,8 @@ describe('sincronizzazione', () => {
     const server = new FakeServer();
     const d = await device(server, ALICE);
     await d.engine.bindAccount(ALICE);
-    await d.store.completeSession(session('enorme', 1, 'a'.repeat(6000)), resolver);
-    await d.store.completeSession(session('normale', 2), resolver);
+    await d.store.completeSession(session('enorme', 1, 'a'.repeat(6000)));
+    await d.store.completeSession(session('normale', 2));
     const r = await d.engine.sync();
     expect(r.localOnly).toBe(1);
     expect(server.count(ALICE)).toBe(1);
@@ -227,7 +227,7 @@ describe('azzeramento e importazione con accesso', () => {
     const server = new FakeServer();
     const a = await device(server, ALICE);
     await a.engine.bindAccount(ALICE);
-    for (let i = 0; i < 3; i++) await a.store.completeSession(session(`s${i}`, i), resolver);
+    for (let i = 0; i < 3; i++) await a.store.completeSession(session(`s${i}`, i));
     await a.engine.sync();
     await a.engine.wipeAccount(ALICE);
     expect(server.count(ALICE)).toBe(0);
@@ -241,7 +241,7 @@ describe('azzeramento e importazione con accesso', () => {
     const server = new FakeServer();
     const d = await device(server, ALICE);
     await d.engine.bindAccount(ALICE);
-    for (let i = 0; i < 10; i++) await d.store.completeSession(session(`old${i}`, i), resolver);
+    for (let i = 0; i < 10; i++) await d.store.completeSession(session(`old${i}`, i));
     await d.engine.sync();
     const file = { format: 'clavis-trainer' as const, version: 1 as const, exportedAt: '', settings: DEFAULT_SETTINGS,
       sessions: [session('f1', 1), session('f2', 2), session('f3', 3)] };

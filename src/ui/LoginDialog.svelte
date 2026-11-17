@@ -2,6 +2,7 @@
   import { onDestroy, onMount } from 'svelte';
   import { app } from './app.svelte';
   import { ApiError, OfflineError, type LoginStart } from '../sync/api';
+  import { t } from '../i18n/index.svelte';
 
   type Phase = 'starting' | 'waiting' | 'approved' | 'denied' | 'expired' | 'error';
   let phase = $state<Phase>('starting');
@@ -21,8 +22,8 @@
     } catch (e) {
       phase = 'error';
       message =
-        e instanceof OfflineError ? 'Server non raggiungibile: controlla la connessione.'
-        : e instanceof ApiError && e.status === 429 ? 'Troppe richieste di accesso: riprova tra un minuto.'
+        e instanceof OfflineError ? t('login.offline')
+        : e instanceof ApiError && e.status === 429 ? t('login.tooMany')
         : String((e as Error).message);
     }
   }
@@ -77,38 +78,37 @@
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 <div class="backdrop" onclick={(e) => e.target === e.currentTarget && close()}>
   <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="login-title">
-    <h2 id="login-title">Accedi con Telegram</h2>
+    <h2 id="login-title">{t('account.login')}</h2>
 
     {#if phase === 'starting'}
-      <p class="muted">Preparo la richiesta…</p>
+      <p class="muted">{t('login.preparing')}</p>
     {:else if phase === 'waiting' && login}
       <ol>
-        <li>Apri il bot: <a class="tg" href={login.url} target="_blank" rel="noreferrer">Apri Telegram</a></li>
-        <li>Premi <strong>Avvia</strong> e controlla che il codice sia questo:</li>
+        <li>{t('login.step1')} <a class="tg" href={login.url} target="_blank" rel="noreferrer">{t('login.open')}</a></li>
+        <li>{t('login.step2')}</li>
       </ol>
-      <p class="code" aria-label="Codice di accesso">{login.code}</p>
+      <p class="code" aria-label={t('login.code')}>{login.code}</p>
       <ol start="3">
-        <li>Premi <strong>Conferma</strong> nel bot. Questa pagina si collega da sola.</li>
+        <li>{t('login.step3')}</li>
       </ol>
-      <p class="muted small">In attesa della conferma… la richiesta scade tra {mmss(remaining)}.</p>
+      <p class="muted small">{t('login.waiting', mmss(remaining))}</p>
     {:else if phase === 'approved'}
-      <p class="ok">Accesso confermato. Sincronizzo lo storico…</p>
+      <p class="ok">{t('login.approved')}</p>
     {:else if phase === 'denied'}
-      <p class="err">Hai annullato l'accesso nel bot. Nessun browser è stato collegato.</p>
-      <button onclick={start}>Riprova</button>
+      <p class="err">{t('login.denied')}</p>
+      <button onclick={start}>{t('common.retry')}</button>
     {:else if phase === 'expired'}
-      <p class="err">La richiesta è scaduta.</p>
-      <button class="primary" onclick={start}>Nuovo codice</button>
+      <p class="err">{t('login.expired')}</p>
+      <button class="primary" onclick={start}>{t('login.newCode')}</button>
     {:else}
       <p class="err">{message}</p>
-      <button onclick={start}>Riprova</button>
+      <button onclick={start}>{t('common.retry')}</button>
     {/if}
 
     <p class="muted small note">
-      Con l'accesso, sessioni e impostazioni vengono salvate sul server di clavis-trainer e seguono il tuo account
-      su ogni dispositivo. Del tuo profilo Telegram si conservano solo id, nome e username.
+      {t('login.privacy')}
     </p>
-    <div class="actions"><button onclick={close}>Chiudi</button></div>
+    <div class="actions"><button onclick={close}>{t('common.close')}</button></div>
   </div>
 </div>
 

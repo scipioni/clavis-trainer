@@ -21,7 +21,7 @@ const browser: Browser = await chromium.launch({ executablePath: process.env.CHR
 const errors: string[] = [];
 
 async function device(name: string): Promise<Page> {
-  const ctx = await browser.newContext({ viewport: { width: 1100, height: 900 } });
+  const ctx = await browser.newContext({ viewport: { width: 1100, height: 900 }, locale: 'it-IT' });
   const page = await ctx.newPage();
   page.setDefaultTimeout(8000);
   page.on('pageerror', (e) => errors.push(`${name}: ${e.message}`));

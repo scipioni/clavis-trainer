@@ -10,7 +10,7 @@ const OUT = new globalThis.URL('./out/', import.meta.url).pathname;
 mkdirSync(OUT, { recursive: true });
 
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM ?? '/usr/bin/chromium' });
-const page = await browser.newPage({ viewport: { width: 1100, height: 900 } });
+const page = await browser.newPage({ viewport: { width: 1100, height: 900 }, locale: 'it-IT' });
 page.setDefaultTimeout(8000);
 const external: string[] = [];
 page.on('request', (r) => {
@@ -176,7 +176,7 @@ await page.screenshot({ path: `${OUT}focus.png` });
 
 // --- informazioni con le fonti
 await page.getByRole('button', { name: 'Informazioni' }).click();
-check(await page.getByText('CC BY-SA 4.0').isVisible(), 'attribuzione del corpus visibile');
+check(await page.getByText('CC BY-SA 4.0').first().isVisible(), 'attribuzione del corpus visibile');
 
 check(external.length === 0, `nessuna richiesta esterna (${external.length})`);
 check(errors.length === 0, `nessun errore JavaScript ${errors.join('; ')}`);

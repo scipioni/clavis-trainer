@@ -33,19 +33,6 @@ export function keyGeometry(pos: number): KeyGeometry {
 export const ALL_POSITIONS: KeyGeometry[] = Array.from({ length: 40 }, (_, i) => keyGeometry(i));
 export const PRESENT_POSITIONS = ALL_POSITIONS.filter((k) => k.present);
 
-export const FINGER_LABELS: Record<Finger, string> = {
-  pinky: 'mignolo',
-  ring: 'anulare',
-  middle: 'medio',
-  index: 'indice',
-  thumb: 'pollice',
-};
-
 export function fingerId(g: Pick<KeyGeometry, 'hand' | 'finger'>): string {
   return `${g.hand}-${g.finger}`;
-}
-
-export function fingerLabel(id: string): string {
-  const [hand, finger] = id.split('-') as [Hand, Finger];
-  return `${FINGER_LABELS[finger]} ${hand === 'L' ? 'sinistro' : 'destro'}`;
 }

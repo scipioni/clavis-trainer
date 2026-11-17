@@ -7,19 +7,25 @@
   import About from './About.svelte';
   import AccountBadge from './AccountBadge.svelte';
   import LoginDialog from './LoginDialog.svelte';
+  import { fmtDate, i18n, t } from '../i18n/index.svelte';
 
-  const TABS: { id: View; label: string }[] = [
-    { id: 'train', label: 'Allenamento' },
-    { id: 'stats', label: 'Statistiche' },
-    { id: 'settings', label: 'Impostazioni' },
-    { id: 'about', label: 'Informazioni' },
-  ];
+  const TABS = $derived<{ id: View; label: string }[]>([
+    { id: 'train', label: t('nav.train') },
+    { id: 'stats', label: t('nav.stats') },
+    { id: 'settings', label: t('nav.settings') },
+    { id: 'about', label: t('nav.about') },
+  ]);
+
+  // lingua del documento allineata all'interfaccia
+  $effect(() => {
+    document.documentElement.lang = i18n.lang;
+  });
 
   onMount(() => {
     void app.init();
   });
 
-  const fmt = (t: number) => new Date(t).toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' });
+  const fmt = (ts: number) => fmtDate(ts, { dateStyle: 'short', timeStyle: 'short' });
 </script>
 
 <header>
@@ -36,15 +42,15 @@
 
 <main>
   {#if app.error}
-    <p class="error">Errore all'avvio: {app.error}</p>
+    <p class="error">{t('app.startError', app.error)}</p>
   {:else if !app.ready}
-    <p class="muted">Caricamento…</p>
+    <p class="muted">{t('app.loading')}</p>
   {:else}
     {#each app.interrupted as s (s.id)}
       <div class="banner">
-        Sessione interrotta del {fmt(s.startedAt)} ({s.samples.length} caratteri).
-        <button onclick={() => app.resolveInterrupted(s, true)}>Salvala come completata</button>
-        <button onclick={() => app.resolveInterrupted(s, false)}>Scartala</button>
+        {t('app.interrupted', fmt(s.startedAt), s.samples.length)}
+        <button onclick={() => app.resolveInterrupted(s, true)}>{t('app.keepInterrupted')}</button>
+        <button onclick={() => app.resolveInterrupted(s, false)}>{t('app.discardInterrupted')}</button>
       </div>
     {/each}
 

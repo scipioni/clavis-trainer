@@ -5,7 +5,7 @@ import type { StatsTable, UnitStats } from '../analysis/stats';
 import { ExerciseGenerator, type AdaptiveOptions, type Corpus } from './generator';
 import { seededRng } from './random';
 
-const load = (f: string) => JSON.parse(readFileSync(new URL(`../../../public/corpus/${f}`, import.meta.url), 'utf8'));
+const load = (f: string, lang = 'it') => JSON.parse(readFileSync(new URL(`../../../public/corpus/${lang}/${f}`, import.meta.url), 'utf8'));
 const corpus: Corpus = { words: load('words.json').words, sentences: load('sentences.json').sentences };
 const gen = new ExerciseGenerator(corpus, clavisResolver());
 
@@ -102,5 +102,37 @@ describe('esplorazione', () => {
     const total = targets.reduce((a, x) => a + x.weight, 0);
     const explore = targets.filter((x) => t[x.key].n < 5).reduce((a, x) => a + x.weight, 0);
     expect(explore / total).toBeCloseTo(0.2);
+  });
+});
+
+describe('lingue e profili', () => {
+  const en: Corpus = { words: load('words.json', 'en').words, sentences: load('sentences.json', 'en').sentences };
+
+  test('esercizi in inglese: parole del corpus inglese, contrazioni senza elisioni italiane', async () => {
+    const g = new ExerciseGenerator(en, clavisResolver(), 'en');
+    const text = g.adaptive({}, { words: 400, capitals: 0, punctuation: 0.5, digits: 0 }, seededRng(11));
+    const vocab = new Set(en.words.map(([w]) => w));
+    const bare = text.split(' ').map((w) => w.replace(/^[("]+|[)".,;:?!]+$/g, ''));
+    expect(bare.every((w) => vocab.has(w))).toBe(true);
+    expect(text).not.toMatch(/\b(l|dell|all|nell|un|d|c)'/);
+  });
+
+  test('profilo ansi:us senza tasti morti: nessun carattere non raggiungibile', async () => {
+    const { resolverFor } = await import('../keyboard');
+    const r = resolverFor({ keyboard: 'ansi', layout: 'us' }, { deadKeys: false });
+    const g = new ExerciseGenerator(corpus, r, 'it');
+    const text = g.adaptive({}, { words: 600, capitals: 0.5, punctuation: 0.5, digits: 0.2 }, seededRng(12));
+    expect(r.canTypeAll(text)).toBe(true);
+    expect(text).not.toMatch(/[àèéìòù]/); // senza tasti morti le accentate non esistono su US
+    expect(r.canTypeAll(g.sentences({}, 30, seededRng(13)))).toBe(true);
+  });
+
+  test('italiano su iso:it: maiuscole solo se digitabili (niente È)', async () => {
+    const { resolverFor } = await import('../keyboard');
+    const r = resolverFor({ keyboard: 'iso', layout: 'it' });
+    const g = new ExerciseGenerator(corpus, r, 'it');
+    const text = g.adaptive({}, { words: 1500, capitals: 1, punctuation: 0, digits: 0 }, seededRng(14));
+    expect(r.canTypeAll(text)).toBe(true);
+    expect(` ${text} `).toMatch(/ è /); // \b non vale per le lettere accentate
   });
 });

@@ -1,4 +1,3 @@
-import type { Resolver } from '../core/keyboard/resolver';
 import { validSession, type ExportData } from '../core/data';
 import type { TrainerStore } from '../storage/db';
 import type { AccountApi, AccountUser } from './api';
@@ -25,7 +24,6 @@ export class SyncEngine {
   constructor(
     private readonly api: AccountApi,
     private readonly store: TrainerStore,
-    private readonly resolver: () => Resolver,
   ) {}
 
   /**
@@ -81,7 +79,7 @@ export class SyncEngine {
 
       if (patch.pending.length === 0 && !res.hasMore) break;
     }
-    if (out.downloaded > 0) await this.store.recomputeStats(this.resolver());
+    if (out.downloaded > 0) await this.store.recomputeStats();
     await this.store.patchSync({ lastSync: Date.now() });
     return out;
   }
@@ -96,7 +94,7 @@ export class SyncEngine {
   /** Importazione con accesso: il contenuto del file sostituisce l'account e il browser. */
   async importIntoAccount(data: ExportData, user: AccountUser): Promise<SyncOutcome> {
     await this.api.deleteData();
-    await this.store.importData(data, this.resolver());
+    await this.store.importData(data);
     await this.store.patchSync({ account: user.id, cursor: 0 });
     return this.sync();
   }

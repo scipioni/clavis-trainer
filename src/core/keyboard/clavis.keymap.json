@@ -3,165 +3,135 @@
  "layers": {
   "BASE": [
    {
-    "tap": "q",
-    "shiftTap": "Q",
+    "code": "KeyQ",
     "label": "q"
    },
    {
-    "tap": "w",
-    "shiftTap": "W",
+    "code": "KeyW",
     "label": "w"
    },
    {
-    "tap": "f",
-    "shiftTap": "F",
+    "code": "KeyF",
     "label": "f"
    },
    {
-    "tap": "p",
-    "shiftTap": "P",
+    "code": "KeyP",
     "label": "p"
    },
    {
-    "tap": "b",
-    "shiftTap": "B",
+    "code": "KeyB",
     "label": "b"
    },
    {
-    "tap": "j",
-    "shiftTap": "J",
+    "code": "KeyJ",
     "label": "j"
    },
    {
-    "tap": "l",
-    "shiftTap": "L",
+    "code": "KeyL",
     "label": "l"
    },
    {
-    "tap": "u",
-    "shiftTap": "U",
+    "code": "KeyU",
     "label": "u"
    },
    {
-    "tap": "y",
-    "shiftTap": "Y",
+    "code": "KeyY",
     "label": "y"
    },
    {
-    "tap": ";",
-    "shiftTap": ":",
-    "label": ";"
+    "code": "Semicolon",
+    "label": ""
    },
    {
-    "tap": "a",
-    "shiftTap": "A",
+    "code": "KeyA",
     "label": "a",
     "holdMod": "gui"
    },
    {
-    "tap": "r",
-    "shiftTap": "R",
+    "code": "KeyR",
     "label": "r",
     "holdMod": "alt"
    },
    {
-    "tap": "s",
-    "shiftTap": "S",
+    "code": "KeyS",
     "label": "s",
     "holdMod": "ctrl"
    },
    {
-    "tap": "t",
-    "shiftTap": "T",
+    "code": "KeyT",
     "label": "t",
     "holdMod": "shift"
    },
    {
-    "tap": "g",
-    "shiftTap": "G",
+    "code": "KeyG",
     "label": "g"
    },
    {
-    "tap": "m",
-    "shiftTap": "M",
+    "code": "KeyM",
     "label": "m"
    },
    {
-    "tap": "n",
-    "shiftTap": "N",
+    "code": "KeyN",
     "label": "n",
     "holdMod": "shift"
    },
    {
-    "tap": "e",
-    "shiftTap": "E",
+    "code": "KeyE",
     "label": "e",
     "holdMod": "ctrl"
    },
    {
-    "tap": "i",
-    "shiftTap": "I",
+    "code": "KeyI",
     "label": "i",
     "holdMod": "alt"
    },
    {
-    "tap": "o",
-    "shiftTap": "O",
+    "code": "KeyO",
     "label": "o",
     "holdMod": "gui"
    },
    {
-    "tap": "z",
-    "shiftTap": "Z",
+    "code": "KeyZ",
     "label": "z",
     "holdLayer": "BUTTON"
    },
    {
-    "tap": "x",
-    "shiftTap": "X",
+    "code": "KeyX",
     "label": "x",
-    "holdMod": "alt"
+    "holdMod": "altgr"
    },
    {
-    "tap": "c",
-    "shiftTap": "C",
+    "code": "KeyC",
     "label": "c"
    },
    {
-    "tap": "d",
-    "shiftTap": "D",
+    "code": "KeyD",
     "label": "d"
    },
    {
-    "tap": "v",
-    "shiftTap": "V",
+    "code": "KeyV",
     "label": "v"
    },
    {
-    "tap": "k",
-    "shiftTap": "K",
+    "code": "KeyK",
     "label": "k"
    },
    {
-    "tap": "h",
-    "shiftTap": "H",
+    "code": "KeyH",
     "label": "h"
    },
    {
-    "tap": ",",
-    "shiftTap": "<",
-    "label": ","
+    "code": "Comma",
+    "label": ""
    },
    {
-    "tap": ".",
-    "shiftTap": ">",
-    "label": ".",
-    "holdMod": "alt"
+    "code": "Period",
+    "label": "",
+    "holdMod": "altgr"
    },
    {
-    "tap": "/",
-    "shiftTap": "?",
-    "label": "/",
+    "code": "Slash",
+    "label": "",
     "holdLayer": "BUTTON"
    },
    {
@@ -173,29 +143,32 @@
     "absent": true
    },
    {
+    "code": "Escape",
     "label": "Esc",
     "holdLayer": "MEDIA"
    },
    {
-    "tap": " ",
+    "code": "Space",
     "label": "␣",
     "holdLayer": "NAV"
    },
    {
-    "tap": "\t",
+    "code": "Tab",
     "label": "⇥",
     "holdLayer": "MOUSE"
    },
    {
-    "tap": "\n",
+    "code": "Enter",
     "label": "⏎",
     "holdLayer": "SYM"
    },
    {
+    "code": "Backspace",
     "label": "⌫",
     "holdLayer": "NUM"
    },
    {
+    "code": "Delete",
     "label": "⌦",
     "holdLayer": "FUN"
    },
@@ -210,29 +183,24 @@
   ],
   "NUM": [
    {
-    "tap": "[",
-    "shiftTap": "{",
-    "label": "["
+    "code": "BracketLeft",
+    "label": ""
    },
    {
-    "tap": "7",
-    "shiftTap": "&",
-    "label": "7"
+    "code": "Digit7",
+    "label": ""
    },
    {
-    "tap": "8",
-    "shiftTap": "*",
-    "label": "8"
+    "code": "Digit8",
+    "label": ""
    },
    {
-    "tap": "9",
-    "shiftTap": "(",
-    "label": "9"
+    "code": "Digit9",
+    "label": ""
    },
    {
-    "tap": "]",
-    "shiftTap": "}",
-    "label": "]"
+    "code": "BracketRight",
+    "label": ""
    },
    {
     "label": ""
@@ -250,29 +218,24 @@
     "label": ""
    },
    {
-    "tap": "'",
-    "shiftTap": "\"",
-    "label": "'"
+    "code": "Quote",
+    "label": ""
    },
    {
-    "tap": "4",
-    "shiftTap": "$",
-    "label": "4"
+    "code": "Digit4",
+    "label": ""
    },
    {
-    "tap": "5",
-    "shiftTap": "%",
-    "label": "5"
+    "code": "Digit5",
+    "label": ""
    },
    {
-    "tap": "6",
-    "shiftTap": "^",
-    "label": "6"
+    "code": "Digit6",
+    "label": ""
    },
    {
-    "tap": "=",
-    "shiftTap": "+",
-    "label": "="
+    "code": "Equal",
+    "label": ""
    },
    {
     "label": ""
@@ -294,29 +257,24 @@
     "label": "gui"
    },
    {
-    "tap": "`",
-    "shiftTap": "~",
-    "label": "`"
+    "code": "Backquote",
+    "label": ""
    },
    {
-    "tap": "1",
-    "shiftTap": "!",
-    "label": "1"
+    "code": "Digit1",
+    "label": ""
    },
    {
-    "tap": "2",
-    "shiftTap": "@",
-    "label": "2"
+    "code": "Digit2",
+    "label": ""
    },
    {
-    "tap": "3",
-    "shiftTap": "#",
-    "label": "3"
+    "code": "Digit3",
+    "label": ""
    },
    {
-    "tap": "\\",
-    "shiftTap": "|",
-    "label": "\\"
+    "code": "Backslash",
+    "label": ""
    },
    {
     "label": ""
@@ -328,8 +286,8 @@
     "label": ""
    },
    {
-    "holdMod": "alt",
-    "label": "alt"
+    "holdMod": "altgr",
+    "label": "AltGr"
    },
    {
     "label": ""
@@ -343,19 +301,16 @@
     "absent": true
    },
    {
-    "tap": ".",
-    "shiftTap": ">",
-    "label": "."
+    "code": "Period",
+    "label": ""
    },
    {
-    "tap": "0",
-    "shiftTap": ")",
-    "label": "0"
+    "code": "Digit0",
+    "label": ""
    },
    {
-    "tap": "-",
-    "shiftTap": "_",
-    "label": "-"
+    "code": "Minus",
+    "label": ""
    },
    {
     "label": ""
@@ -377,26 +332,28 @@
   ],
   "SYM": [
    {
-    "tap": "{",
-    "label": "{"
+    "code": "BracketLeft",
+    "shift": true,
+    "label": ""
    },
    {
-    "tap": "&",
-    "label": "&"
+    "code": "Digit7",
+    "shift": true,
+    "label": ""
    },
    {
-    "tap": "*",
-    "label": "*"
+    "code": "Digit8",
+    "shift": true,
+    "label": ""
    },
    {
-    "tap": "(",
-    "label": "("
+    "code": "Digit9",
+    "shift": true,
+    "label": ""
    },
    {
-    "tap": "}",
-    "label": "}"
-   },
-   {
+    "code": "BracketRight",
+    "shift": true,
     "label": ""
    },
    {
@@ -412,24 +369,32 @@
     "label": ""
    },
    {
-    "tap": ":",
-    "label": ":"
+    "label": ""
    },
    {
-    "tap": "$",
-    "label": "$"
+    "code": "Semicolon",
+    "shift": true,
+    "label": ""
    },
    {
-    "tap": "%",
-    "label": "%"
+    "code": "Digit4",
+    "shift": true,
+    "label": ""
    },
    {
-    "tap": "^",
-    "label": "^"
+    "code": "Digit5",
+    "shift": true,
+    "label": ""
    },
    {
-    "tap": "+",
-    "label": "+"
+    "code": "Digit6",
+    "shift": true,
+    "label": ""
+   },
+   {
+    "code": "Equal",
+    "shift": true,
+    "label": ""
    },
    {
     "label": ""
@@ -451,26 +416,28 @@
     "label": "gui"
    },
    {
-    "tap": "~",
-    "label": "~"
+    "code": "Backquote",
+    "shift": true,
+    "label": ""
    },
    {
-    "tap": "!",
-    "label": "!"
+    "code": "Digit1",
+    "shift": true,
+    "label": ""
    },
    {
-    "tap": "@",
-    "label": "@"
+    "code": "Digit2",
+    "shift": true,
+    "label": ""
    },
    {
-    "tap": "#",
-    "label": "#"
+    "code": "Digit3",
+    "shift": true,
+    "label": ""
    },
    {
-    "tap": "|",
-    "label": "|"
-   },
-   {
+    "code": "Backslash",
+    "shift": true,
     "label": ""
    },
    {
@@ -480,8 +447,11 @@
     "label": ""
    },
    {
-    "holdMod": "alt",
-    "label": "alt"
+    "label": ""
+   },
+   {
+    "holdMod": "altgr",
+    "label": "AltGr"
    },
    {
     "label": ""
@@ -495,16 +465,19 @@
     "absent": true
    },
    {
-    "tap": "(",
-    "label": "("
+    "code": "Digit9",
+    "shift": true,
+    "label": ""
    },
    {
-    "tap": ")",
-    "label": ")"
+    "code": "Digit0",
+    "shift": true,
+    "label": ""
    },
    {
-    "tap": "_",
-    "label": "_"
+    "code": "Minus",
+    "shift": true,
+    "label": ""
    },
    {
     "label": ""

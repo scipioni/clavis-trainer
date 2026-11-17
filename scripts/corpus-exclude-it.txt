@@ -1,5 +1,5 @@
 # Parole escluse dal corpus (una per riga, minuscole). Le righe con # sono commenti.
-# Dopo una modifica: bun run build:corpus
+# Dopo una modifica: bun run build:corpus it
 cazzo
 cazzi
 cazzate

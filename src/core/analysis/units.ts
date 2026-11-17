@@ -1,16 +1,9 @@
-import { fingerId, keyGeometry } from '../keyboard/geometry';
+import { fingerId } from '../keyboard/geometry';
 import type { Resolver } from '../keyboard/resolver';
 
 export type UnitType = 'char' | 'bigram' | 'layer' | 'dead' | 'finger';
 export const UNIT_TYPES: UnitType[] = ['char', 'bigram', 'layer', 'dead', 'finger'];
 
-export const UNIT_TYPE_LABELS: Record<UnitType, string> = {
-  char: 'Caratteri',
-  bigram: 'Bigrammi',
-  layer: 'Transizioni di layer',
-  dead: 'Tasti morti',
-  finger: 'Dita',
-};
 
 export interface Unit {
   type: UnitType;
@@ -33,13 +26,14 @@ export function unitsOf(char: string, prev: string | null, resolver: Resolver): 
   if (prev !== null && prev !== ' ' && char !== ' ') units.push({ type: 'bigram', value: prev + char });
   const res = resolver.resolve(char);
   if (res) {
-    if (prev !== null) {
+    // le transizioni di layer esistono solo su tastiere con layer (clavis)
+    if (prev !== null && resolver.hasLayers) {
       const a = resolver.layerOf(prev);
       const b = res.strokes[0].layer;
       if (a && a !== b) units.push({ type: 'layer', value: `${a}>${b}` });
     }
     if (res.dead) units.push({ type: 'dead', value: char });
-    units.push({ type: 'finger', value: fingerId(keyGeometry(res.strokes[0].tap.pos)) });
+    units.push({ type: 'finger', value: fingerId(resolver.board.keys[res.strokes[0].tap.pos]) });
   }
   return units;
 }

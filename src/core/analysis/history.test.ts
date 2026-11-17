@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { clavisKeymap } from '../keyboard';
+import { clavisKeymap, clavisResolver, US } from '../keyboard';
 import { byDay, heatmap, summary, type HistoryEntry } from './history';
 import type { StatsTable } from './stats';
 
@@ -39,21 +39,21 @@ describe('mappa di calore', () => {
   const table: StatsTable = { 'char:a': stat(150), 'char:e': stat(200, 0.1), 'char:b': stat(450, 0.02), 'char:(': stat(600) };
 
   test('il tasto più lento ha il valore massimo', () => {
-    const h = heatmap(table, clavisKeymap, 'BASE', 'time');
-    const posB = clavisKeymap.layers.BASE.findIndex((k) => k.tap === 'b');
+    const h = heatmap(table, clavisResolver(), 'BASE', 'time');
+    const posB = clavisKeymap.layers.BASE.findIndex((k) => k.code && US.keys[k.code]![0] === 'b');
     expect(h.values[posB]).toBe(1);
-    expect(h.values[clavisKeymap.layers.BASE.findIndex((k) => k.tap === 'a')]).toBe(0);
-    expect(h.values[clavisKeymap.layers.BASE.findIndex((k) => k.tap === 'q')]).toBeNull();
+    expect(h.values[clavisKeymap.layers.BASE.findIndex((k) => k.code && US.keys[k.code]![0] === 'a')]).toBe(0);
+    expect(h.values[clavisKeymap.layers.BASE.findIndex((k) => k.code && US.keys[k.code]![0] === 'q')]).toBeNull();
   });
 
   test('metrica errori', () => {
-    const h = heatmap(table, clavisKeymap, 'BASE', 'errors');
-    expect(h.values[clavisKeymap.layers.BASE.findIndex((k) => k.tap === 'e')]).toBe(1);
+    const h = heatmap(table, clavisResolver(), 'BASE', 'errors');
+    expect(h.values[clavisKeymap.layers.BASE.findIndex((k) => k.code && US.keys[k.code]![0] === 'e')]).toBe(1);
   });
 
   test('layer SYM: simboli con dati, gli altri neutri', () => {
-    const h = heatmap(table, clavisKeymap, 'SYM', 'time');
-    const posPar = clavisKeymap.layers.SYM.findIndex((k) => k.tap === '(');
+    const h = heatmap(table, clavisResolver(), 'SYM', 'time');
+    const posPar = clavisKeymap.layers.SYM.findIndex((k) => k.code === 'Digit9' && k.shift);
     expect(h.values[posPar]).toBe(0.5); // unico dato sul layer
     expect(h.values.filter((v) => v !== null)).toHaveLength(2); // ( sta sia in riga superiore sia sul pollice
     expect(h.titles[posPar]).toContain('600 ms');

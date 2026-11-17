@@ -5,6 +5,8 @@ export interface TgUser {
   is_bot?: boolean;
   first_name: string;
   username?: string;
+  /** Lingua dell'app Telegram dell'utente (IETF, es. "it", "en-GB"). */
+  language_code?: string;
 }
 
 export interface TgMessage {
@@ -109,16 +111,16 @@ export class FakeTelegramApi implements TelegramApi {
       case 'sendMessage':
         return { message_id: this.nextMessage++, chat: { id: params.chat_id }, text: params.text } as T;
       case 'getMyName':
-        return { name: this.profile.name ?? '' } as T;
       case 'getMyDescription':
-        return { description: this.profile.description ?? '' } as T;
-      case 'getMyShortDescription':
-        return { short_description: this.profile.short_description ?? '' } as T;
+      case 'getMyShortDescription': {
+        const field = { getMyName: 'name', getMyDescription: 'description', getMyShortDescription: 'short_description' }[method]!;
+        return { [field]: this.profile[`${field}|${params.language_code ?? ''}`] ?? '' } as T;
+      }
       case 'setMyName':
       case 'setMyDescription':
       case 'setMyShortDescription': {
-        const [k, v] = Object.entries(params)[0] ?? [];
-        if (k) this.profile[k] = String(v);
+        const field = Object.keys(params).find((k) => k !== 'language_code');
+        if (field) this.profile[`${field}|${params.language_code ?? ''}`] = String(params[field]);
         return true as T;
       }
       default:

@@ -1,18 +1,41 @@
+import type { Code } from './osmaps';
+
 export type LayerName = 'BASE' | 'NUM' | 'SYM';
 export const TEXT_LAYERS: LayerName[] = ['BASE', 'NUM', 'SYM'];
 
-export type Modifier = 'shift' | 'ctrl' | 'alt' | 'gui';
+export type Modifier = 'shift' | 'ctrl' | 'alt' | 'gui' | 'altgr';
 export type Hand = 'L' | 'R';
 export type Finger = 'pinky' | 'ring' | 'middle' | 'index' | 'thumb';
 
-/** Azione di una posizione della keymap (una delle 40 posizioni Miryoku). */
+export type KeyboardId = 'clavis' | 'ansi' | 'iso';
+export type LayoutId = 'colemakdh' | 'us' | 'it';
+export const KEYBOARDS: KeyboardId[] = ['clavis', 'ansi', 'iso'];
+export const LAYOUTS: LayoutId[] = ['colemakdh', 'us', 'it'];
+
+/** Profilo di digitazione: tastiera fisica × layout. */
+export interface Profile {
+  keyboard: KeyboardId;
+  layout: LayoutId;
+}
+
+export const DEFAULT_PROFILE: Profile = { keyboard: 'clavis', layout: 'colemakdh' };
+export const profileId = (p: Profile) => `${p.keyboard}:${p.layout}`;
+
+export function parseProfileId(id: string): Profile | null {
+  const [keyboard, layout] = id.split(':');
+  return KEYBOARDS.includes(keyboard as KeyboardId) && LAYOUTS.includes(layout as LayoutId)
+    ? { keyboard: keyboard as KeyboardId, layout: layout as LayoutId }
+    : null;
+}
+
+/** Azione di un tasto su un layer. */
 export interface KeyAction {
-  /** Etichetta breve da mostrare sul tasto. */
+  /** Etichetta di riserva per i tasti che non producono testo. */
   label: string;
-  /** Carattere prodotto battendo il tasto senza Shift. */
-  tap?: string;
-  /** Carattere prodotto battendo il tasto con Shift. */
-  shiftTap?: string;
+  /** Keycode emesso battendo il tasto. */
+  code?: Code;
+  /** Il tasto emette il keycode con Shift già premuto (es. `&kp LPAR` = Shift+9). */
+  shift?: boolean;
   /** Modificatore attivo tenendo premuto il tasto (home row mod o tasto modificatore). */
   holdMod?: Modifier;
   /** Layer attivato tenendo premuto il tasto. */
@@ -26,7 +49,7 @@ export interface Keymap {
   layers: Record<LayerName, KeyAction[]>;
 }
 
-/** Riferimento a un tasto fisico (0..39) letto su un certo layer. */
+/** Riferimento a un tasto fisico letto su un certo layer. */
 export interface KeyRef {
   layer: LayerName;
   pos: number;

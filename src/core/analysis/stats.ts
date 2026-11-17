@@ -55,10 +55,13 @@ export function applySamples(table: StatsTable, samples: Sample[], resolver: Res
   return table;
 }
 
-/** Ricalcola da zero rigiocando le sessioni in ordine. */
-export function recompute(sessions: { samples: Sample[] }[], resolver: Resolver): StatsTable {
+/**
+ * Ricalcola da zero rigiocando le sessioni in ordine. `resolver` può dipendere
+ * dalla sessione (profilo e tasti morti con cui è stata fatta).
+ */
+export function recompute<S extends { samples: Sample[] }>(sessions: S[], resolver: Resolver | ((s: S) => Resolver)): StatsTable {
   const table: StatsTable = {};
-  for (const s of sessions) applySamples(table, s.samples, resolver);
+  for (const s of sessions) applySamples(table, s.samples, typeof resolver === 'function' ? resolver(s) : resolver);
   return table;
 }
 

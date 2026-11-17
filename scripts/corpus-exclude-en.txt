@@ -1,0 +1,50 @@
+# Words excluded from the English corpus (one per line, lowercase). Lines starting with # are comments.
+# After a change: bun run build:corpus en
+fuck
+fucking
+fucked
+fucker
+motherfucker
+shit
+shitty
+bullshit
+bitch
+bitches
+asshole
+dick
+dickhead
+cock
+pussy
+cunt
+whore
+slut
+bastard
+bastards
+damn
+goddamn
+nigga
+nigger
+fag
+faggot
+retard
+# Frammenti di contrazioni spezzate da FrequencyWords (don't → don + t): le contrazioni vere
+# vengono ricostruite dalle frasi di Tatoeba in build-corpus.ts.
+don
+didn
+isn
+doesn
+wasn
+aren
+couldn
+wouldn
+shouldn
+haven
+hasn
+hadn
+weren
+mustn
+needn
+ain
+re
+ll
+ve

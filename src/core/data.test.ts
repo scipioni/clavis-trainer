@@ -38,3 +38,26 @@ describe('impostazioni', () => {
     expect(normalizeSettings('x')).toBeNull();
   });
 });
+
+describe('profilo e lingua', () => {
+  test('sessione di una versione precedente (senza profilo) accettata e attribuita a clavis + Colemak-DH in italiano', async () => {
+    const { sessionProfile, sessionLang } = await import('./data');
+    const old = session(3);
+    expect(validSession(old)).toBe(true);
+    expect(sessionProfile(old)).toEqual({ keyboard: 'clavis', layout: 'colemakdh' });
+    expect(sessionLang(old)).toBe('it');
+  });
+
+  test('profilo conosciuto accettato, sconosciuto rifiutato', () => {
+    expect(validSession({ ...session(3), keyboard: 'iso', layout: 'it', lang: 'en' })).toBe(true);
+    expect(validSession({ ...session(3), layout: 'dvorak' })).toBe(false);
+    expect(validSession({ ...session(3), keyboard: 'ergodox' })).toBe(false);
+    expect(validSession({ ...session(3), lang: 'de' })).toBe(false);
+  });
+
+  test('impostazioni vecchie completate con profilo e lingue predefiniti', () => {
+    const old = { mode: 'adaptive', durationSec: 60, deadKeys: true, showKeyboard: false, capitals: 0.1, punctuation: 0.1, digits: 0 };
+    expect(normalizeSettings(old)).toMatchObject({ keyboard: 'clavis', layout: 'colemakdh', uiLang: 'it', exerciseLang: 'it', showKeyboard: false });
+    expect(normalizeSettings({ ...old, layout: 'dvorak' })).toBeNull();
+  });
+});

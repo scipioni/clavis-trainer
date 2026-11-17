@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { SessionResult } from '../core/session/result';
   import { pct, ms, showChar } from './labels';
+  import { fmtNum, t } from '../i18n/index.svelte';
 
   interface Props {
     result: SessionResult;
@@ -11,17 +12,17 @@
 
 <section class="results">
   <div class="tiles">
-    <div class="tile"><span class="v">{Math.round(result.wpm)}</span><span class="l">WPM</span></div>
-    <div class="tile"><span class="v">{pct(result.accuracy)}</span><span class="l">precisione</span></div>
-    <div class="tile"><span class="v">{result.errors}</span><span class="l">errori</span></div>
-    <div class="tile"><span class="v">{result.deadErrors}</span><span class="l">da tasti morti</span></div>
-    <div class="tile"><span class="v">{result.modMisfires}</span><span class="l">mod involontari</span></div>
-    <div class="tile"><span class="v">{(result.activeMs / 1000).toFixed(0)} s</span><span class="l">{result.chars} caratteri</span></div>
+    <div class="tile"><span class="v">{fmtNum(result.wpm)}</span><span class="l">{t('results.wpm')}</span></div>
+    <div class="tile"><span class="v">{pct(result.accuracy)}</span><span class="l">{t('results.accuracy')}</span></div>
+    <div class="tile"><span class="v">{result.errors}</span><span class="l">{t('results.errors')}</span></div>
+    <div class="tile"><span class="v">{result.deadErrors}</span><span class="l">{t('results.deadErrors')}</span></div>
+    <div class="tile"><span class="v">{result.modMisfires}</span><span class="l">{t('results.misfires')}</span></div>
+    <div class="tile"><span class="v">{(result.activeMs / 1000).toFixed(0)} s</span><span class="l">{t('results.chars', result.chars)}</span></div>
   </div>
 
   <div class="cols">
     <div>
-      <h3>Caratteri più lenti</h3>
+      <h3>{t('results.slowChars')}</h3>
       <ol>
         {#each result.slowestChars as x (x.key)}
           <li><code>{showChar(x.key)}</code> {ms(x.avgMs)} <span class="muted">×{x.count}</span></li>
@@ -29,7 +30,7 @@
       </ol>
     </div>
     <div>
-      <h3>Bigrammi più lenti</h3>
+      <h3>{t('results.slowBigrams')}</h3>
       <ol>
         {#each result.slowestBigrams as x (x.key)}
           <li><code>{[...x.key].map(showChar).join('')}</code> {ms(x.avgMs)} <span class="muted">×{x.count}</span></li>
@@ -38,7 +39,7 @@
     </div>
   </div>
 
-  <button class="primary" onclick={onAgain}>Nuova sessione</button>
+  <button class="primary" onclick={onAgain}>{t('results.again')}</button>
 </section>
 
 <style>
