@@ -1,10 +1,9 @@
 <script lang="ts">
   import { onDestroy, onMount, tick } from 'svelte';
-  import { fly } from 'svelte/transition';
   import { prefersReducedMotion } from 'svelte/motion';
   import { app } from './app.svelte';
   import { GUIDE_KINDS, resolverFor, type GuideKind } from '../core/keyboard';
-  import { GUIDE_STEPS, bumpKeys, guideProfile, homePads } from '../core/guide';
+  import { GUIDE_STEPS, bumpKeys, guideProfile, homePads, type GuideStep } from '../core/guide';
   import { t } from '../i18n/index.svelte';
   import GuideKeyboard from './GuideKeyboard.svelte';
   import { focusOnShow } from './focusOnShow';
@@ -38,15 +37,14 @@
       .join(' ');
   }
 
-  const body = $derived.by(() => {
-    const prefix = `guide.${kind}.${step.id}` as const;
-    if (step.id === 'home') return t(`guide.${kind}.home.body`, homeLetters('L'), homeLetters('R'));
-    if (step.id === 'bumps') {
+  function bodyOf(id: GuideStep['id']): string {
+    if (id === 'home') return t(`guide.${kind}.home.body`, homeLetters('L'), homeLetters('R'));
+    if (id === 'bumps') {
       const [f, j] = bumpKeys(resolver.board).map(label);
       return t('guide.classic.bumps.body', f ?? 'F', j ?? 'J');
     }
-    return t(`${prefix}.body` as Parameters<typeof t>[0]);
-  });
+    return t(`guide.${kind}.${id}.body` as Parameters<typeof t>[0]);
+  }
 
   function go(delta: number) {
     const next = index + delta;
@@ -77,7 +75,7 @@
 
   /** Elementi raggiungibili con Tab dentro il dialogo. */
   function focusables(): HTMLElement[] {
-    return dialog ? [...dialog.querySelectorAll<HTMLElement>('button:not([disabled])')] : [];
+    return dialog ? [...dialog.querySelectorAll<HTMLElement>('button:not([disabled])')].filter((b) => !b.closest('.hidden')) : [];
   }
 
   function onKeydown(e: KeyboardEvent) {
@@ -125,12 +123,10 @@
     window.removeEventListener('keydown', onKeydown, true);
     void tick().then(() => previous?.focus?.({ preventScroll: true }));
   });
-
-  const flyIn = (node: Element) => fly(node, { x: 30 * dir, duration: reduced ? 0 : 220 });
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-<div class="backdrop" onclick={(e) => e.target === e.currentTarget && close()}>
+<div class="backdrop">
   <div
     class="dialog"
     role="dialog"
@@ -148,25 +144,29 @@
       <button class="x" aria-label={t('common.close')} onclick={close}>✕</button>
     </div>
 
-    {#key `${kind}:${step.id}`}
-      <div class="text" in:flyIn>
-        <h2 id="guide-title">{t(`guide.${kind}.${step.id}.title` as Parameters<typeof t>[0])}</h2>
-        <p id="guide-body">{body}</p>
-        {#if step.id === 'zones' && profile.layout === 'colemakdh'}<p class="muted small">{t('guide.classic.zones.angle')}</p>{/if}
-      </div>
-    {/key}
+    <!-- i testi di tutti i passi stanno nella stessa cella: l'altezza è quella del
+         più lungo, così il dialogo non cambia misura e "Avanti" resta dov'è -->
+    <div class="texts">
+      {#each steps as s, i (s.id)}
+        {@const current = i === index}
+        <div class="text" class:current class:back={dir < 0} class:reduced aria-hidden={!current}>
+          <h2 id={current ? 'guide-title' : undefined}>{t(`guide.${kind}.${s.id}.title` as Parameters<typeof t>[0])}</h2>
+          <p id={current ? 'guide-body' : undefined}>{bodyOf(s.id)}</p>
+          {#if s.id === 'zones' && profile.layout === 'colemakdh'}<p class="muted small">{t('guide.classic.zones.angle')}</p>{/if}
+        </div>
+      {/each}
+    </div>
 
-    {#if index === 0}
-      <div class="kinds" role="group" aria-label={t('guide.version')}>
-        <span class="muted small">{t('guide.version')}</span>
-        {#each GUIDE_KINDS as k (k)}
-          <button class:active={k === kind} aria-pressed={k === kind} onclick={() => choose(k)}>{t(`guide.kind.${k}`)}</button>
-        {/each}
-      </div>
-    {/if}
+    <!-- il selettore occupa il suo spazio anche quando è nascosto -->
+    <div class="kinds" class:hidden={index !== 0} role="group" aria-label={t('guide.version')} aria-hidden={index !== 0}>
+      <span class="muted small">{t('guide.version')}</span>
+      {#each GUIDE_KINDS as k (k)}
+        <button class:active={k === kind} aria-pressed={k === kind} onclick={() => choose(k)}>{t(`guide.kind.${k}`)}</button>
+      {/each}
+    </div>
 
     <GuideKeyboard {profile} {step} />
-    {#if step.pads !== 'none'}<p class="muted small legend">{t('guide.legend')}</p>{/if}
+    <p class="muted small legend" class:hidden={step.pads === 'none'}>{t('guide.legend')}</p>
 
     <div class="actions">
       <button onclick={() => go(-1)} disabled={index === 0}>{t('guide.back')}</button>
@@ -174,7 +174,11 @@
         {#each steps as s, i (s.id)}<span class:on={i === index}></span>{/each}
       </div>
       <!-- aperta da sola: un Invio battuto un attimo prima non salta il primo passo -->
-      <button class="primary" use:focusOnShow={app.guideAuto ? 800 : 0} onclick={() => go(1)} data-testid="guide-next">{last ? t('guide.start') : t('guide.next')}</button>
+      <button class="primary" use:focusOnShow={app.guideAuto ? 800 : 0} onclick={() => go(1)} data-testid="guide-next">
+        <!-- le due scritte sovrapposte: il pulsante ha sempre la larghezza della più lunga -->
+        <span class:hidden={last} aria-hidden={last}>{t('guide.next')}</span>
+        <span class:hidden={!last} aria-hidden={!last}>{t('guide.start')}</span>
+      </button>
     </div>
   </div>
 </div>
@@ -213,8 +217,37 @@
     font-size: 1.1rem;
     padding: 0.2rem 0.5rem;
   }
+  .texts {
+    display: grid;
+  }
   .text {
-    min-height: 7.5rem;
+    grid-area: 1 / 1;
+    visibility: hidden;
+  }
+  .text.current {
+    visibility: visible;
+    animation: slide-in 220ms ease-out;
+  }
+  .text.current.back {
+    animation-name: slide-in-back;
+  }
+  .text.reduced {
+    animation: none;
+  }
+  .hidden {
+    visibility: hidden;
+  }
+  @keyframes slide-in {
+    from {
+      opacity: 0;
+      transform: translateX(30px);
+    }
+  }
+  @keyframes slide-in-back {
+    from {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
   }
   h2 {
     margin: 0.4rem 0 0.4rem;
@@ -249,6 +282,12 @@
     align-items: center;
     gap: 1rem;
     margin-top: 0.5rem;
+  }
+  [data-testid='guide-next'] {
+    display: grid;
+  }
+  [data-testid='guide-next'] span {
+    grid-area: 1 / 1;
   }
   .dots {
     display: flex;

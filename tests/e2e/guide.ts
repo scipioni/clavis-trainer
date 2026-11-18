@@ -183,6 +183,35 @@ check(!(await page.getByTestId('nav-guide').isDisabled()), 'voce Guida di nuovo 
   await p.context().close();
 }
 
+// --- "Avanti" resta nello stesso punto a ogni passo (un clic in più non finisce fuori dal dialogo)
+for (const [locale, width] of [['it-IT', 1100], ['en-US', 400]] as const) {
+  const p = await open(locale, { width, reducedMotion: 'reduce' });
+  await guide(p).waitFor();
+  for (const kind of ['clavis', 'classic'] as const) {
+    if ((await kindOf(p)) !== kind) await p.getByRole('dialog').locator('.kinds button').nth(kind === 'clavis' ? 0 : 1).click();
+    const next = p.getByTestId('guide-next');
+    const positions = new Set<string>();
+    const steps = kind === 'clavis' ? 7 : 6;
+    for (let i = 0; i < steps; i++) {
+      // tutti i fotogrammi della demo e del ciclo delle dita
+      for (let f = 0; f < 3; f++) {
+        const b = (await next.boundingBox())!;
+        positions.add(`${Math.round(b.x)},${Math.round(b.y)}`);
+        await p.waitForTimeout(f < 2 ? 900 : 0);
+      }
+      if (i < steps - 1) await next.click();
+    }
+    check(positions.size === 1, `${kind} a ${width} px: "Avanti" sempre nello stesso punto (${[...positions].join(' ')})`);
+    if (kind === 'clavis') {
+      await p.keyboard.press('Escape');
+      await p.getByTestId('nav-guide').click();
+    }
+  }
+  await p.mouse.click(5, 895);
+  check(await guide(p).isVisible(), `${width} px: un clic fuori dal dialogo non chiude la guida`);
+  await p.context().close();
+}
+
 // --- movimento ridotto: nessuna animazione
 {
   const p = await open('it-IT', { reducedMotion: 'reduce' });
@@ -192,9 +221,9 @@ check(!(await page.getByTestId('nav-guide').isDisabled()), 'voce Guida di nuovo 
   await p.waitForTimeout(100);
   const running = await p.evaluate(() => document.getAnimations().length);
   check(running === 0, `movimento ridotto: nessuna animazione in corso (${running})`);
-  const caption = await p.locator('.caption').innerText();
+  const caption = await p.locator('.caption.current').innerText();
   await p.waitForTimeout(2200);
-  check((await p.locator('.caption').innerText()) === caption && caption.startsWith('Maiuscola'), 'movimento ridotto: demo ferma sul fotogramma della maiuscola');
+  check((await p.locator('.caption.current').innerText()) === caption && caption.startsWith('Maiuscola'), 'movimento ridotto: demo ferma sul fotogramma della maiuscola');
   await p.context().close();
 }
 

@@ -2,7 +2,7 @@
   import { prefersReducedMotion } from 'svelte/motion';
   import { resolverFor, type Finger, type Hand, type Profile } from '../core/keyboard';
   import {
-    FINGER_CYCLE, bumpKeys, demoFrames, fingerKey, highlightedKeys, homePads, thumbPads, type DemoFrame, type GuideStep, type Pad,
+    FINGER_CYCLE, GUIDE_STEPS, bumpKeys, demoFrames, guideKind, fingerKey, highlightedKeys, homePads, thumbPads, type DemoFrame, type GuideStep, type Pad,
   } from '../core/guide';
   import { t } from '../i18n/index.svelte';
   import Keyboard from './Keyboard.svelte';
@@ -78,17 +78,31 @@
   const marked = $derived(frame && frame.layer !== 'BASE' ? [] : highlightedKeys(board, step));
   const bumps = $derived(bumpKeys(board));
 
-  const caption = $derived.by<string | null>(() => {
-    if (frame) {
-      if (frame.caption === 'shift') {
-        const letter = frame.tap !== null ? upper(frame.tap) : '';
-        return board.keyboard === 'clavis' ? t('guide.demo.shift.clavis', letter) : t('guide.demo.shift.classic', letter);
-      }
-      return t(`guide.demo.${frame.caption}`);
+  function frameCaption(f: DemoFrame): string {
+    if (f.caption === 'shift') {
+      const letter = f.tap !== null ? upper(f.tap) : '';
+      return board.keyboard === 'clavis' ? t('guide.demo.shift.clavis', letter) : t('guide.demo.shift.classic', letter);
     }
-    if (active) return `${t(`guide.fingerName.${active.finger as Finger}`)} ${t(`guide.hand.${active.hand}`)}`;
-    if (step.zones === 'hands') return `${t('guide.handZone.L')} | ${t('guide.handZone.R')}`;
+    return t(`guide.demo.${f.caption}`);
+  }
+  const fingerCaption = (f: { hand: Hand; finger: Finger }) => `${t(`guide.fingerName.${f.finger}`)} ${t(`guide.hand.${f.hand}`)}`;
+  const handsCaption = $derived(`${t('guide.handZone.L')} | ${t('guide.handZone.R')}`);
+
+  const caption = $derived.by<string | null>(() => {
+    if (frame) return frameCaption(frame);
+    if (active) return fingerCaption(active);
+    if (step.zones === 'hands') return handsCaption;
     return null;
+  });
+
+  /**
+   * Tutte le didascalie possibili in questa guida: stanno nella stessa cella,
+   * così la loro altezza non cambia da un passo all'altro.
+   */
+  const captions = $derived.by(() => {
+    const all = new Set<string>([handsCaption, ...FINGER_CYCLE.map(fingerCaption)]);
+    for (const s of GUIDE_STEPS[guideKind(board.keyboard)]) for (const f of demoFrames(board, s)) all.add(frameCaption(f));
+    return [...all];
   });
 
   const R = 12;
@@ -124,7 +138,10 @@
       {/each}
     {/snippet}
   </Keyboard>
-  <p class="caption" aria-live="polite">{caption ?? ''}</p>
+  <div class="captions">
+    {#each captions as c (c)}<p class="caption" class:current={c === caption} aria-hidden={c !== caption}>{c}</p>{/each}
+    <p class="sr-only" aria-live="polite">{caption ?? ''}</p>
+  </div>
 </div>
 
 <style>
@@ -158,12 +175,28 @@
     fill: var(--finger-fg);
     pointer-events: none;
   }
+  .captions {
+    display: grid;
+    margin-top: 0.4rem;
+  }
   .caption {
-    min-height: 1.5em;
-    margin: 0.4rem 0 0;
+    grid-area: 1 / 1;
+    margin: 0;
     text-align: center;
     color: var(--muted);
     font-size: 0.9rem;
+    visibility: hidden;
+  }
+  .caption.current {
+    visibility: visible;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
   @keyframes drop {
     from {
