@@ -18,6 +18,11 @@ and makes your history follow you across devices.
 - **Three modes**: adaptive (words and drills built from your weakest
   characters, bigrams, layer transitions and dead keys), sentences, and free
   text.
+- **Finger placement guide**: a short animated walkthrough of where to rest
+  your fingers and which finger types each key, in two versions (clavis and
+  standard ANSI/ISO keyboards) drawn with your layout. It opens by itself the
+  first time you use each kind of keyboard and is always available from
+  **Guide** in the menu.
 - **Keyboard guide**: shows which key to tap, which key to hold (Shift on the
   opposite home row mod, layer keys) and the dead key sequence for accented
   letters.
@@ -151,6 +156,17 @@ in English), switches the interface language without reloading, draws the
 three keyboards with the Italian layout (screenshots in `tests/e2e/out/`),
 checks the unreachable-character warning and that two profiles keep separate
 statistics.
+
+`tests/e2e/guide.ts` covers the finger placement guide: opening on first
+launch and on the first switch to another kind of keyboard, keyboard
+navigation, keys not reaching the practice area, reopening from the menu,
+waiting for an interrupted session, English, a 400 px screen and reduced
+motion. The other suites close the guide as soon as it covers the page
+(`tests/e2e/dismissGuide.ts`).
+
+```sh
+bun tests/e2e/guide.ts            # against bun run preview on :4173
+```
 
 They do not replace testing with a real clavis: dead key composition and home
 row mods depend on the operating system and the firmware.

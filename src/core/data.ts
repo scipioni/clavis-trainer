@@ -4,7 +4,7 @@
  */
 import type { Sample } from './session/session';
 import type { SessionResult } from './session/result';
-import { KEYBOARDS, LAYOUTS, DEFAULT_PROFILE, type KeyboardId, type LayoutId, type Profile } from './keyboard/types';
+import { KEYBOARDS, LAYOUTS, GUIDE_KINDS, DEFAULT_PROFILE, type GuideKind, type KeyboardId, type LayoutId, type Profile } from './keyboard/types';
 import { isLang, type Lang } from './exercise/languages';
 
 export type ExerciseMode = 'adaptive' | 'sentences' | 'free';
@@ -51,6 +51,8 @@ export interface Settings {
   uiLang: Lang;
   /** Lingua degli esercizi. */
   exerciseLang: Lang;
+  /** Versioni della guida al posizionamento delle dita già viste (chiuse almeno una volta). */
+  guideSeen: GuideKind[];
 }
 
 /** Valori predefiniti; le lingue di un utente nuovo vengono poi dalla lingua del browser. */
@@ -66,6 +68,7 @@ export const DEFAULT_SETTINGS: Settings = {
   layout: DEFAULT_PROFILE.layout,
   uiLang: 'it',
   exerciseLang: 'it',
+  guideSeen: [],
 };
 
 export const EXPORT_FORMAT = 'clavis-trainer';
@@ -139,7 +142,14 @@ export function normalizeSettings(x: unknown): Settings | null {
     KEYBOARDS.includes(s.keyboard) && LAYOUTS.includes(s.layout) && isLang(s.uiLang) && isLang(s.exerciseLang);
   if (!valid) return null;
   const { mode, durationSec, deadKeys, showKeyboard, capitals, punctuation, digits, keyboard, layout, uiLang, exerciseLang } = s;
-  return { mode, durationSec, deadKeys, showKeyboard, capitals, punctuation, digits, keyboard, layout, uiLang, exerciseLang };
+  const guideSeen = normalizeGuideSeen(s.guideSeen);
+  return { mode, durationSec, deadKeys, showKeyboard, capitals, punctuation, digits, keyboard, layout, uiLang, exerciseLang, guideSeen };
+}
+
+/** Guide già viste: un valore rovinato vale come "nessuna", senza rifiutare le altre impostazioni. */
+function normalizeGuideSeen(v: unknown): GuideKind[] {
+  if (!Array.isArray(v) || !v.every((k) => GUIDE_KINDS.includes(k as GuideKind))) return [];
+  return GUIDE_KINDS.filter((k) => v.includes(k));
 }
 
 /** Valida il contenuto di un file di esportazione; lancia ImportError se non è valido. */

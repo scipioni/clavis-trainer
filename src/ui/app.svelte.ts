@@ -1,4 +1,5 @@
-import { resolverFor, profileId, type Profile, type Resolver } from '../core/keyboard';
+import { resolverFor, profileId, type GuideKind, type Profile, type Resolver } from '../core/keyboard';
+import { guideKind, markSeen, shouldAutoOpen } from '../core/guide';
 import { ExerciseGenerator, type Corpus } from '../core/exercise/generator';
 import type { Lang } from '../core/exercise/languages';
 import { sessionProfile } from '../core/data';
@@ -55,6 +56,14 @@ class AppState {
   dbBlocked = $state(false);
   /** Un'altra scheda ha aggiornato il database: questa va ricaricata. */
   outdated = $state(false);
+  /** Guida al posizionamento delle dita aperta (versione mostrata) o chiusa. */
+  guideOpen = $state<GuideKind | null>(null);
+  /** La guida aperta è partita da sola (primo avvio o tastiera nuova). */
+  guideAuto = $state(false);
+  /** Una sessione di allenamento è iniziata e non è ancora finita. */
+  sessionActive = $state(false);
+  /** Versioni mostrate dall'apertura corrente della guida. */
+  private guideShown = new Set<GuideKind>();
 
   store!: TrainerStore;
   api: AccountApi = new HttpAccountApi();
@@ -226,6 +235,39 @@ class AppState {
     i18n.lang = s.uiLang;
     await this.loadCorpus(s.exerciseLang);
     if (profileId(this.profile) !== before) this.focus = null;
+  }
+
+  /** La guida della tastiera attiva va aperta da sola adesso? */
+  get guideDue(): boolean {
+    return shouldAutoOpen({
+      ready: this.ready,
+      interrupted: this.interrupted.length,
+      sessionActive: this.sessionActive,
+      open: this.guideOpen !== null,
+      kind: guideKind(this.settings.keyboard),
+      seen: this.settings.guideSeen,
+    });
+  }
+
+  /** Apre la guida; senza versione, quella della tastiera del profilo attivo. */
+  openGuide(kind: GuideKind = guideKind(this.settings.keyboard), auto = false) {
+    this.guideShown = new Set([kind]);
+    this.guideAuto = auto;
+    this.guideOpen = kind;
+  }
+
+  /** Cambia versione dentro la guida aperta (il profilo resta quello). */
+  showGuide(kind: GuideKind) {
+    this.guideShown.add(kind);
+    this.guideOpen = kind;
+  }
+
+  /** Chiude la guida: le versioni mostrate contano come viste. */
+  async closeGuide() {
+    const seen = markSeen(this.settings.guideSeen, this.guideShown);
+    this.guideOpen = null;
+    this.guideAuto = false;
+    if (seen.length !== this.settings.guideSeen.length) await this.saveSettings({ guideSeen: seen });
   }
 
   async saveSettings(patch: Partial<Settings>) {

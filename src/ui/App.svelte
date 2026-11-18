@@ -7,6 +7,7 @@
   import About from './About.svelte';
   import AccountBadge from './AccountBadge.svelte';
   import LoginDialog from './LoginDialog.svelte';
+  import Guide from './Guide.svelte';
   import { fmtDate, i18n, t } from '../i18n/index.svelte';
 
   const TABS = $derived<{ id: View; label: string }[]>([
@@ -25,6 +26,12 @@
     void app.init();
   });
 
+  // guida al primo avvio e alla prima volta su un tipo di tastiera: aspetta
+  // il caricamento, le sessioni interrotte e la fine di una sessione in corso
+  $effect(() => {
+    if (app.guideDue) app.openGuide(undefined, true);
+  });
+
   const fmt = (ts: number) => fmtDate(ts, { dateStyle: 'short', timeStyle: 'short' });
 </script>
 
@@ -34,11 +41,13 @@
     {#each TABS as t (t.id)}
       <button class:active={app.view === t.id} onclick={() => (app.view = t.id)}>{t.label}</button>
     {/each}
+    <button onclick={() => app.openGuide()} disabled={!app.ready || app.sessionActive} data-testid="nav-guide">{t('nav.guide')}</button>
   </nav>
   {#if app.ready}<div class="account"><AccountBadge /></div>{/if}
 </header>
 
 {#if app.loginOpen}<LoginDialog />{/if}
+{#if app.guideOpen}<Guide />{/if}
 
 <main>
   {#if app.outdated}
@@ -92,6 +101,12 @@
     --cursor: #ffe08a;
     --key-bg: #ffffff;
     --key-border: #b9b6ad;
+    --finger-pinky: #d6336c;
+    --finger-ring: #c76a00;
+    --finger-middle: #2b8a3e;
+    --finger-index: #1c64d4;
+    --finger-thumb: #7c4dcc;
+    --finger-fg: #ffffff;
     --mono: ui-monospace, 'JetBrains Mono', 'Fira Code', Menlo, Consolas, monospace;
   }
   @media (prefers-color-scheme: dark) {
@@ -110,6 +125,12 @@
       --cursor: #6b5a1e;
       --key-bg: #262a2f;
       --key-border: #4a4f57;
+      --finger-pinky: #f06595;
+      --finger-ring: #ffa94d;
+      --finger-middle: #69db7c;
+      --finger-index: #74a7f7;
+      --finger-thumb: #b197fc;
+      --finger-fg: #0f1114;
     }
   }
   :global(body) {

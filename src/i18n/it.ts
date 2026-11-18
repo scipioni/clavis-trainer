@@ -7,6 +7,7 @@ export const it = {
   'nav.stats': 'Statistiche',
   'nav.settings': 'Impostazioni',
   'nav.about': 'Informazioni',
+  'nav.guide': 'Guida',
   'app.loading': 'Caricamento…',
   'app.startError': (msg: string) => `Errore all'avvio: ${msg}`,
   'app.interrupted': (date: string, chars: number) => `Sessione interrotta del ${date} (${plural(chars, 'carattere', 'caratteri')}).`,
@@ -209,12 +210,86 @@ export const it = {
   'login.privacy':
     "Con l'accesso, sessioni e impostazioni vengono salvate sul server di clavis-trainer e seguono il tuo account su ogni dispositivo. Del tuo profilo Telegram si conservano solo id, nome e username.",
 
+  // guida al posizionamento delle dita
+  'guide.label': 'Guida al posizionamento delle dita',
+  'guide.step': (n: number, total: number) => `Passo ${n} di ${total}`,
+  'guide.back': 'Indietro',
+  'guide.next': 'Avanti',
+  'guide.start': 'Inizia ad allenarti',
+  'guide.version': 'Guida per',
+  'guide.kind.clavis': 'clavis',
+  'guide.kind.classic': 'tastiera classica',
+  'guide.finger.pinky': 'Mi',
+  'guide.finger.ring': 'An',
+  'guide.finger.middle': 'Me',
+  'guide.finger.index': 'In',
+  'guide.finger.thumb': 'Po',
+  'guide.fingerName.pinky': 'mignolo',
+  'guide.fingerName.ring': 'anulare',
+  'guide.fingerName.middle': 'medio',
+  'guide.fingerName.index': 'indice',
+  'guide.fingerName.thumb': 'pollice',
+  'guide.hand.L': 'sinistro',
+  'guide.hand.R': 'destro',
+  'guide.handZone.L': 'mano sinistra',
+  'guide.handZone.R': 'mano destra',
+  'guide.legend': 'Sigle: Mi mignolo, An anulare, Me medio, In indice, Po pollice.',
+  'guide.demo.rest': 'A riposo: tutte le dita sulla posizione base.',
+  'guide.demo.shift.clavis': (letter: string) => `Maiuscola: tieni premuto lo Shift della mano destra (indice sulla riga centrale) e batti ${letter} con la sinistra.`,
+  'guide.demo.shift.classic': (letter: string) => `Maiuscola: il mignolo destro tiene lo Shift, l'indice sinistro batte ${letter}.`,
+  'guide.demo.num': 'Pollice tenuto premuto: layer NUM, numeri sotto la mano sinistra.',
+  'guide.demo.sym': 'Pollice tenuto premuto: layer SYM, i simboli.',
+
+  'guide.clavis.welcome.title': 'Benvenuto su clavis-trainer',
+  'guide.clavis.welcome.body':
+    'In pochi passi vedi dove appoggiare le dita su clavis e quale dito batte ogni tasto. Puoi riaprire questa guida quando vuoi dalla voce Guida.',
+  'guide.clavis.halves.title': 'Le due metà',
+  'guide.clavis.halves.body':
+    "clavis è divisa in due: ogni metà appartiene a una mano, senza eccezioni. Allarga le metà più o meno alla larghezza delle spalle, così i polsi restano dritti. Le righe non sono sfalsate come su una tastiera classica: sono le colonne a seguire la lunghezza delle dita.",
+  'guide.clavis.home.title': 'La posizione base',
+  'guide.clavis.home.body': (left: string, right: string) =>
+    `Appoggia i polpastrelli sulla riga centrale: ${left} a sinistra, ${right} a destra. Da qui parte ogni movimento, e qui le dita tornano dopo ogni tasto.`,
+  'guide.clavis.columns.title': 'Una colonna per dito',
+  'guide.clavis.columns.body':
+    "Ogni dito batte solo la sua colonna: un tasto sopra, uno sotto. Gli indici coprono anche la colonna interna, verso il centro. Le dita si muovono solo in verticale, e la mano resta ferma.",
+  'guide.clavis.thumbs.title': 'I pollici',
+  'guide.clavis.thumbs.body':
+    "Ogni pollice ha tre tasti e a riposo sta su quello centrale: il sinistro sullo spazio, il destro su cancella (⌫). Gli altri tasti (Invio, Tab, Esc, Canc) sono a un passo, senza staccare la mano.",
+  'guide.clavis.hold.title': 'Battere o tenere premuto',
+  'guide.clavis.hold.body':
+    "Molti tasti fanno due cose: battuti scrivono, tenuti premuti fanno altro. I tasti della riga centrale tenuti premuti sono i modificatori (la maiuscola si fa tenendo lo Shift della mano opposta) e i pollici tenuti premuti passano ai layer dei numeri (NUM) e dei simboli (SYM).",
+  'guide.clavis.ready.title': 'Pronto',
+  'guide.clavis.ready.body':
+    "Ecco le zone di tutte le dita. All'inizio vai piano e non guardare la tastiera: la precisione viene prima della velocità. Le statistiche ti diranno su quali tasti insistere.",
+
+  'guide.classic.welcome.title': 'Benvenuto su clavis-trainer',
+  'guide.classic.welcome.body':
+    'In pochi passi vedi dove appoggiare le dita sulla tastiera e quale dito batte ogni tasto. Puoi riaprire questa guida quando vuoi dalla voce Guida.',
+  'guide.classic.bumps.title': 'Le tacche',
+  'guide.classic.bumps.body': (f: string, j: string) =>
+    `I tasti ${f} e ${j} hanno un piccolo rilievo: gli indici li trovano senza guardare. Sono il punto di riferimento per tornare in posizione.`,
+  'guide.classic.home.title': 'La posizione base',
+  'guide.classic.home.body': (left: string, right: string) =>
+    `Appoggia gli indici sulle tacche e le altre dita accanto: ${left} a sinistra, ${right} a destra. Da qui parte ogni movimento, e qui le dita tornano dopo ogni tasto.`,
+  'guide.classic.zones.title': 'Le zone delle dita',
+  'guide.classic.zones.body':
+    'Ogni dito ha la sua zona, una fascia obliqua che segue lo sfalsamento delle righe. Gli indici coprono due colonne ciascuno, i mignoli tutti i tasti sul bordo.',
+  'guide.classic.zones.angle':
+    "Con Colemak-DH la riga in basso a sinistra si batte con le dita spostate di un tasto (angle mod): il polso resta dritto invece di piegarsi verso l'esterno.",
+  'guide.classic.thumbs.title': 'Pollici e Shift',
+  'guide.classic.thumbs.body':
+    'I pollici stanno sulla barra spaziatrice. Per le maiuscole tieni premuto con il mignolo lo Shift della mano opposta: per una lettera della mano sinistra lo Shift destro, e viceversa.',
+  'guide.classic.ready.title': 'Pronto',
+  'guide.classic.ready.body':
+    "Ecco le zone di tutte le dita. All'inizio vai piano e non guardare la tastiera: la precisione viene prima della velocità. Le statistiche ti diranno su quali tasti insistere.",
+
   // informazioni
   'about.intro':
     'Trainer di digitazione per la tastiera split clavis (36 tasti, Miryoku Colemak-DH con home row mods) e per le tastiere classiche ANSI e ISO, con layout Colemak-DH, US QWERTY o Italiano QWERTY.',
   'about.privacy':
     "Senza accesso tutto resta in questo browser. Con l'accesso Telegram (facoltativo) sessioni e impostazioni vengono salvate anche sul server di clavis-trainer, per averle su ogni dispositivo; di Telegram si conservano solo id, nome e username.",
   'about.how': 'Come funziona',
+  'about.guide': 'Per ripassare dove appoggiare le dita e quale dito batte ogni tasto, apri la Guida dal menu.',
   'about.how1': 'Il cursore avanza solo col carattere giusto; gli errori restano segnati.',
   'about.how2': 'Per ogni carattere si misura il tempo dal carattere precedente. Dopo 5 secondi senza digitare la sessione va in pausa.',
   'about.how3': 'Ctrl, Alt o Meta premuti durante la sessione contano come mod involontari: su clavis di solito un roll troppo veloce sugli home row mods.',

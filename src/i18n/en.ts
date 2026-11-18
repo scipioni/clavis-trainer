@@ -7,6 +7,7 @@ export const en: Messages = {
   'nav.stats': 'Statistics',
   'nav.settings': 'Settings',
   'nav.about': 'About',
+  'nav.guide': 'Guide',
   'app.loading': 'Loading…',
   'app.startError': (msg) => `Startup error: ${msg}`,
   'app.interrupted': (date, chars) => `Interrupted session from ${date} (${plural(chars, 'character', 'characters')}).`,
@@ -202,11 +203,84 @@ export const en: Messages = {
   'login.privacy':
     'When you sign in, sessions and settings are stored on the clavis-trainer server and follow your account on every device. From your Telegram profile only the id, name and username are kept.',
 
+  'guide.label': 'Finger placement guide',
+  'guide.step': (n, total) => `Step ${n} of ${total}`,
+  'guide.back': 'Back',
+  'guide.next': 'Next',
+  'guide.start': 'Start practicing',
+  'guide.version': 'Guide for',
+  'guide.kind.clavis': 'clavis',
+  'guide.kind.classic': 'standard keyboard',
+  'guide.finger.pinky': 'P',
+  'guide.finger.ring': 'R',
+  'guide.finger.middle': 'M',
+  'guide.finger.index': 'I',
+  'guide.finger.thumb': 'T',
+  'guide.fingerName.pinky': 'pinky',
+  'guide.fingerName.ring': 'ring finger',
+  'guide.fingerName.middle': 'middle finger',
+  'guide.fingerName.index': 'index finger',
+  'guide.fingerName.thumb': 'thumb',
+  'guide.hand.L': 'left',
+  'guide.hand.R': 'right',
+  'guide.handZone.L': 'left hand',
+  'guide.handZone.R': 'right hand',
+  'guide.legend': 'Labels: P pinky, R ring, M middle, I index, T thumb.',
+  'guide.demo.rest': 'At rest: every finger on the home position.',
+  'guide.demo.shift.clavis': (letter) => `Capital letter: hold the right hand's Shift (index on the home row) and tap ${letter} with the left hand.`,
+  'guide.demo.shift.classic': (letter) => `Capital letter: the right pinky holds Shift, the left index taps ${letter}.`,
+  'guide.demo.num': 'Thumb held down: NUM layer, digits under the left hand.',
+  'guide.demo.sym': 'Thumb held down: SYM layer, the symbols.',
+
+  'guide.clavis.welcome.title': 'Welcome to clavis-trainer',
+  'guide.clavis.welcome.body':
+    'In a few steps you will see where to rest your fingers on clavis and which finger types each key. You can reopen this guide at any time from Guide.',
+  'guide.clavis.halves.title': 'Two halves',
+  'guide.clavis.halves.body':
+    'clavis is split in two: each half belongs to one hand, no exceptions. Place the halves about shoulder width apart so your wrists stay straight. Rows are not staggered as on a standard keyboard: the columns follow the length of your fingers instead.',
+  'guide.clavis.home.title': 'Home position',
+  'guide.clavis.home.body': (left, right) =>
+    `Rest your fingertips on the middle row: ${left} on the left, ${right} on the right. Every movement starts here, and your fingers come back here after each key.`,
+  'guide.clavis.columns.title': 'One column per finger',
+  'guide.clavis.columns.body':
+    'Each finger types only its own column: one key up, one key down. The index fingers also cover the inner column, towards the middle. Fingers move only vertically, and the hand stays still.',
+  'guide.clavis.thumbs.title': 'Thumbs',
+  'guide.clavis.thumbs.body':
+    'Each thumb has three keys and rests on the middle one: the left thumb on space, the right one on backspace (⌫). The other keys (Enter, Tab, Esc, Delete) are one step away, without lifting your hand.',
+  'guide.clavis.hold.title': 'Tap or hold',
+  'guide.clavis.hold.body':
+    'Many keys do two things: tapped they type, held down they do something else. Held middle-row keys are modifiers (a capital letter means holding the Shift of the opposite hand), and held thumbs switch to the number (NUM) and symbol (SYM) layers.',
+  'guide.clavis.ready.title': 'Ready',
+  'guide.clavis.ready.body':
+    "Here are all the finger zones. Go slowly at first and don't look at the keyboard: accuracy comes before speed. Your statistics will show you which keys need work.",
+
+  'guide.classic.welcome.title': 'Welcome to clavis-trainer',
+  'guide.classic.welcome.body':
+    'In a few steps you will see where to rest your fingers on the keyboard and which finger types each key. You can reopen this guide at any time from Guide.',
+  'guide.classic.bumps.title': 'The bumps',
+  'guide.classic.bumps.body': (f, j) =>
+    `The ${f} and ${j} keys have a small bump: your index fingers find them without looking. They are your reference for getting back into position.`,
+  'guide.classic.home.title': 'Home position',
+  'guide.classic.home.body': (left, right) =>
+    `Rest your index fingers on the bumps and the other fingers next to them: ${left} on the left, ${right} on the right. Every movement starts here, and your fingers come back here after each key.`,
+  'guide.classic.zones.title': 'Finger zones',
+  'guide.classic.zones.body':
+    'Each finger has its own zone, a slanted band that follows the row stagger. The index fingers cover two columns each, the pinkies every key on the edge.',
+  'guide.classic.zones.angle':
+    'With Colemak-DH the bottom-left row is typed with the fingers shifted by one key (angle mod): your wrist stays straight instead of bending outwards.',
+  'guide.classic.thumbs.title': 'Thumbs and Shift',
+  'guide.classic.thumbs.body':
+    'Your thumbs rest on the space bar. For capital letters, hold the Shift of the opposite hand with your pinky: right Shift for a left-hand letter, and vice versa.',
+  'guide.classic.ready.title': 'Ready',
+  'guide.classic.ready.body':
+    "Here are all the finger zones. Go slowly at first and don't look at the keyboard: accuracy comes before speed. Your statistics will show you which keys need work.",
+
   'about.intro':
     'A typing trainer for the clavis split keyboard (36 keys, Miryoku Colemak-DH with home row mods) and for standard ANSI and ISO keyboards, with Colemak-DH, US QWERTY or Italian QWERTY layouts.',
   'about.privacy':
     'Without signing in, everything stays in this browser. With the optional Telegram sign-in, sessions and settings are also stored on the clavis-trainer server so you have them on every device; from Telegram only the id, name and username are kept.',
   'about.how': 'How it works',
+  'about.guide': 'To review where to rest your fingers and which finger types each key, open Guide from the menu.',
   'about.how1': 'The cursor only moves on with the right character; errors stay marked.',
   'about.how2': 'Each character is timed from the previous one. After 5 seconds without typing the session pauses.',
   'about.how3': 'Ctrl, Alt or Meta pressed during a session count as accidental mods: on clavis usually a roll that is too fast over the home row mods.',

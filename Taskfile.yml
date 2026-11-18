@@ -31,6 +31,7 @@ tasks:
       - bun tests/e2e/smoke.ts http://localhost:8088/
       - bun tests/e2e/account.ts http://localhost:8088/
       - bun tests/e2e/profiles.ts http://localhost:8088/
+      - bun tests/e2e/guide.ts http://localhost:8088/
 
   docker:publish:
     desc: Rilascio manuale su Docker Hub (sha-<commit>, latest e la versione se HEAD ha un tag vX.Y.Z)

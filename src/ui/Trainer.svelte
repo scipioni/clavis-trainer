@@ -221,6 +221,14 @@
     return () => clearInterval(id);
   });
 
+  // sessione iniziata e non finita: niente guida finché dura
+  $effect(() => {
+    void version;
+    void now;
+    app.sessionActive = !!session && (session.status === 'running' || session.status === 'paused');
+  });
+  onDestroy(() => (app.sessionActive = false));
+
   // allenamento mirato richiesto dalle statistiche: prepara subito la sessione
   $effect(() => {
     if (app.focus && app.settings.mode !== 'free' && !session) void prepare();

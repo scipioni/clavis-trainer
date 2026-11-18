@@ -61,3 +61,27 @@ describe('profilo e lingua', () => {
     expect(normalizeSettings({ ...old, layout: 'dvorak' })).toBeNull();
   });
 });
+
+describe('guide già viste', () => {
+  test('impostazioni senza il campo: nessuna guida vista', () => {
+    expect(normalizeSettings({ deadKeys: false })?.guideSeen).toEqual([]);
+  });
+
+  test('valore valido conservato, duplicati tolti', () => {
+    expect(normalizeSettings({ guideSeen: ['classic'] })?.guideSeen).toEqual(['classic']);
+    expect(normalizeSettings({ guideSeen: ['classic', 'clavis', 'classic'] })?.guideSeen).toEqual(['clavis', 'classic']);
+  });
+
+  test('valore rovinato riportato a nessuna, senza rifiutare le impostazioni', () => {
+    expect(normalizeSettings({ guideSeen: ['dvorak'], deadKeys: false })).toEqual({ ...DEFAULT_SETTINGS, deadKeys: false, guideSeen: [] });
+    expect(normalizeSettings({ guideSeen: 'clavis' })?.guideSeen).toEqual([]);
+  });
+
+  test('file di esportazione con e senza il campo', async () => {
+    const { parseExport, EXPORT_FORMAT, EXPORT_VERSION } = await import('./data');
+    const file = (settings: unknown) => JSON.stringify({ format: EXPORT_FORMAT, version: EXPORT_VERSION, exportedAt: '', sessions: [], settings });
+    expect(parseExport(file({ ...DEFAULT_SETTINGS, guideSeen: ['clavis'] })).settings.guideSeen).toEqual(['clavis']);
+    const { guideSeen: _, ...old } = DEFAULT_SETTINGS;
+    expect(parseExport(file(old)).settings.guideSeen).toEqual([]);
+  });
+});

@@ -352,6 +352,14 @@ describe('sincronizzazione', () => {
     expect(r.settings.value.showKeyboard).toBe(false);
   });
 
+  test('guida già vista su un altro dispositivo', async () => {
+    const laptop = await login();
+    const desktop = await login();
+    await sync(laptop, { upload: [], cursor: 0, settings: { value: { ...DEFAULT_SETTINGS, guideSeen: ['clavis'] }, updatedAt: 500 } });
+    const r = await (await sync(desktop, { upload: [], cursor: 0 })).json();
+    expect(r.settings.value.guideSeen).toEqual(['clavis']);
+  });
+
   test('cancellazione dei dati dell\'account', async () => {
     const c = await login();
     await sync(c, { upload: [session('a')], cursor: 0 });

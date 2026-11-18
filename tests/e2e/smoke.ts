@@ -1,6 +1,7 @@
 // Smoke test dell'interfaccia con Chromium di sistema.
 // Uso: bun run build && bun run preview --port 4173 &  poi  bun tests/e2e/smoke.ts [url]
 // Simula i tasti morti con eventi di composizione, come fa il browser con US International.
+import { dismissGuide } from './dismissGuide';
 import { chromium, type Page } from 'playwright-core';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { computeResult } from '../../src/core/session/result';
@@ -11,6 +12,7 @@ mkdirSync(OUT, { recursive: true });
 
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM ?? '/usr/bin/chromium' });
 const page = await browser.newPage({ viewport: { width: 1100, height: 900 }, locale: 'it-IT' });
+await dismissGuide(page);
 page.setDefaultTimeout(8000);
 const external: string[] = [];
 page.on('request', (r) => {

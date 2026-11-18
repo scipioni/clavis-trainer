@@ -1,6 +1,7 @@
 // E2E di profili (tastiera × layout) e lingue.
 // Uso: server avviato come per account.ts (porta 8099), poi
 //   bun tests/e2e/profiles.ts http://localhost:8099/
+import { dismissGuide } from './dismissGuide';
 import { chromium, type Page } from 'playwright-core';
 import { mkdirSync, readFileSync } from 'node:fs';
 
@@ -21,6 +22,7 @@ const browser = await chromium.launch({ executablePath: process.env.CHROMIUM ?? 
 const errors: string[] = [];
 const ctx = await browser.newContext({ viewport: { width: 1200, height: 950 }, locale: 'en-US' });
 const page = await ctx.newPage();
+await dismissGuide(page);
 page.setDefaultTimeout(8000);
 page.on('pageerror', (e) => errors.push(e.message));
 

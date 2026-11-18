@@ -1,6 +1,8 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
   import { SPECIAL_LABELS, type LayerName, type Resolver } from '../core/keyboard';
   import { t } from '../i18n/index.svelte';
+  import { PAD, U, isoEnterPath } from './keyShape';
 
   interface Props {
     /** Tastiera (board) e mappa del sistema del profilo. */
@@ -14,12 +16,15 @@
     heat?: (number | null)[] | null;
     /** Testo del tooltip per posizione. */
     titles?: (string | null)[] | null;
+    /** Colore di riempimento per posizione (ha la precedenza sulla mappa di calore). */
+    fill?: (string | null)[] | null;
+    /** Tasti in evidenza (bordo spesso). */
+    marked?: number[];
+    /** Disegno sovrapposto ai tasti, nelle stesse coordinate dell'SVG. */
+    overlay?: Snippet;
   }
 
-  let { resolver, layer = 'BASE', tap = null, holds = [], heat = null, titles = null }: Props = $props();
-
-  const U = 54;
-  const PAD = 6;
+  let { resolver, layer = 'BASE', tap = null, holds = [], heat = null, titles = null, fill = null, marked = [], overlay }: Props = $props();
   const board = $derived(resolver.board);
 
   const MOD_LABEL: Record<string, string> = { shift: '⇧', ctrl: 'ctrl', alt: 'alt', gui: 'gui', altgr: 'AltGr' };
@@ -48,13 +53,11 @@
     return `hsl(${hue} 70% 50% / 0.85)`;
   }
 
-  /** Invio ISO a L: parte alta larga 1,5, parte bassa 1,25 allineata a destra. */
-  function isoEnterPath(w: number, h: number): string {
-    const top = w * U;
-    const step = 0.25 * U;
-    const mid = 0.95 * U;
-    const r = 8;
-    return `M${r},0 H${top - r} Q${top},0 ${top},${r} V${h * U - r} Q${top},${h * U} ${top - r},${h * U} H${step + r} Q${step},${h * U} ${step},${h * U - r} V${mid} H${r} Q0,${mid} 0,${mid - r} V${r} Q0,0 ${r},0 Z`;
+  function fillOf(pos: number): string | null {
+    const f = fill?.[pos];
+    if (f) return f;
+    const h = heat?.[pos] ?? null;
+    return h !== null ? heatColor(h) : null;
   }
 
   const width = $derived(board.width * U + PAD * 2);
@@ -64,7 +67,7 @@
 <svg viewBox="0 0 {width} {height}" class="kb" class:classic={board.keyboard !== 'clavis'} role="img" aria-label={t('kb.aria', layer)}>
   {#each board.keys.filter((k) => k.present) as k (k.pos)}
     {@const l = labelOf(k.pos)}
-    {@const h = heat?.[k.pos] ?? null}
+    {@const f = fillOf(k.pos)}
     {@const w = k.w * U}
     {@const ht = k.h * U}
     <g
@@ -72,18 +75,20 @@
       class:tap={tap === k.pos}
       class:hold={holds.includes(k.pos)}
       class:empty={!l.main}
+      class:marked={marked.includes(k.pos)}
       transform="translate({k.x * U + PAD} {k.y * U + PAD})"
     >
       {#if titles?.[k.pos]}<title>{titles[k.pos]}</title>{/if}
       {#if k.isoEnter}
-        <path d={isoEnterPath(k.w, k.h)} style:fill={h !== null ? heatColor(h) : null} />
+        <path d={isoEnterPath(k.w, k.h)} style:fill={f} />
       {:else}
-        <rect width={w} height={ht} rx="8" style:fill={h !== null ? heatColor(h) : null} />
+        <rect width={w} height={ht} rx="8" style:fill={f} />
       {/if}
       <text x={k.isoEnter ? w / 2 + 0.12 * U : w / 2} y={l.sub ? ht / 2 + 1 : (k.isoEnter ? 0.95 * U : ht) / 2 + 6} class="main">{l.main}</text>
       {#if l.sub}<text x={w / 2} y={ht - 7} class="sub">{l.sub}</text>{/if}
     </g>
   {/each}
+  {@render overlay?.()}
 </svg>
 
 <style>
@@ -122,6 +127,11 @@
   .empty rect,
   .empty path {
     opacity: 0.45;
+  }
+  .marked rect,
+  .marked path {
+    stroke: var(--accent);
+    stroke-width: 3.5;
   }
   .tap rect,
   .tap path {

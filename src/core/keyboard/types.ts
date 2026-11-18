@@ -12,6 +12,10 @@ export type LayoutId = 'colemakdh' | 'us' | 'it';
 export const KEYBOARDS: KeyboardId[] = ['clavis', 'ansi', 'iso'];
 export const LAYOUTS: LayoutId[] = ['colemakdh', 'us', 'it'];
 
+/** Versione della guida al posizionamento delle dita: clavis o tastiera classica (ANSI/ISO). */
+export type GuideKind = 'clavis' | 'classic';
+export const GUIDE_KINDS: GuideKind[] = ['clavis', 'classic'];
+
 /** Profilo di digitazione: tastiera fisica × layout. */
 export interface Profile {
   keyboard: KeyboardId;

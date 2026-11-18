@@ -4,6 +4,7 @@
 //   TELEGRAM_FAKE=1 COOKIE_SECURE=0 PORT=8099 PUBLIC_URL=http://localhost:8099 DATA_DIR=$(mktemp -d) bun server/main.ts &
 //   bun tests/e2e/account.ts http://localhost:8099/
 // Ogni contesto del browser è un dispositivo diverso.
+import { dismissGuide } from './dismissGuide';
 import { chromium, type Browser, type Page } from 'playwright-core';
 import { mkdirSync } from 'node:fs';
 
@@ -23,6 +24,7 @@ const errors: string[] = [];
 async function device(name: string): Promise<Page> {
   const ctx = await browser.newContext({ viewport: { width: 1100, height: 900 }, locale: 'it-IT' });
   const page = await ctx.newPage();
+  await dismissGuide(page);
   page.setDefaultTimeout(8000);
   page.on('pageerror', (e) => errors.push(`${name}: ${e.message}`));
   await page.goto(URL);
