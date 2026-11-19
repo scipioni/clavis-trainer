@@ -10,6 +10,7 @@ export * from './resolver';
 export * from './deadKeys';
 export * from './boards';
 export * from './osmaps';
+export * from './reference';
 
 export const clavisKeymap = keymapJson as Keymap;
 

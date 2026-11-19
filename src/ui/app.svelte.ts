@@ -9,7 +9,10 @@ import { DEFAULT_SETTINGS, TrainerStore, type ExportData, type Settings, type St
 import { HttpAccountApi, OfflineError, UnauthorizedError, type AccountApi, type AccountUser } from '../sync/api';
 import { SyncEngine } from '../sync/engine';
 
-export type View = 'train' | 'stats' | 'settings' | 'about';
+export type View = 'train' | 'stats' | 'settings' | 'about' | 'layout';
+
+/** Vista indicata dall'indirizzo: solo la mappa dei layer ha un indirizzo proprio. */
+export const viewFromHash = (hash: string): View | null => (hash === '#layout' ? 'layout' : null);
 
 /** Oltre questo tempo un'apertura del database ferma va spiegata all'utente. */
 const DB_SLOW_MS = 3000;
@@ -34,7 +37,9 @@ export interface AccountState {
 
 /** Stato globale dell'applicazione (runes di Svelte 5). */
 class AppState {
-  view = $state<View>('train');
+  view = $state<View>((typeof location !== 'undefined' && viewFromHash(location.hash)) || 'train');
+  /** Ultima vista diversa dalla mappa dei layer: si torna lì lasciando `#layout` con il pulsante Indietro. */
+  lastView: View = 'train';
   ready = $state(false);
   error = $state<string | null>(null);
   settings = $state<Settings>({ ...DEFAULT_SETTINGS });
@@ -106,6 +111,9 @@ class AppState {
   }
 
   async init() {
+    // lingua del browser finché non si leggono le impostazioni: la mappa dei layer
+    // si mostra senza aspettare il database
+    i18n.lang = detectLanguage(navigator.languages ?? [navigator.language]);
     try {
       // Se l'apertura è in coda dietro un'altra richiesta bloccata, il browser non
       // segnala "blocked" a questa pagina: dopo qualche secondo lo diciamo comunque.
@@ -244,6 +252,7 @@ class AppState {
       interrupted: this.interrupted.length,
       sessionActive: this.sessionActive,
       open: this.guideOpen !== null,
+      onLayout: this.view === 'layout',
       kind: guideKind(this.settings.keyboard),
       seen: this.settings.guideSeen,
     });

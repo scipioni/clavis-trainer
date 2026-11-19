@@ -1,7 +1,12 @@
 import type { Code } from './osmaps';
 
+/** Layer che producono testo: gli unici usati dalla risoluzione dei caratteri. */
 export type LayerName = 'BASE' | 'NUM' | 'SYM';
 export const TEXT_LAYERS: LayerName[] = ['BASE', 'NUM', 'SYM'];
+
+/** Tutti i layer di clavis (Miryoku), nell'ordine del firmware. */
+export type ClavisLayer = 'BASE' | 'NAV' | 'MOUSE' | 'MEDIA' | 'NUM' | 'SYM' | 'FUN' | 'BUTTON';
+export const CLAVIS_LAYERS: ClavisLayer[] = ['BASE', 'NAV', 'MOUSE', 'MEDIA', 'NUM', 'SYM', 'FUN', 'BUTTON'];
 
 export type Modifier = 'shift' | 'ctrl' | 'alt' | 'gui' | 'altgr';
 export type Hand = 'L' | 'R';
@@ -46,11 +51,21 @@ export interface KeyAction {
   holdLayer?: string;
   /** Posizione assente sulla tastiera fisica (U_NP). */
   absent?: boolean;
+  /**
+   * Funzione dei tasti che non emettono testo (`nav.left`, `clip.cut`,
+   * `bt.0`, `to.SYM`, `none`...): serve alla mappa di consultazione.
+   */
+  fn?: string;
+  /**
+   * Keycode emesso con AltGr già premuto (`&kp RA(SQT)`). Sta fuori da `code`
+   * perché la risoluzione dei caratteri non lo usa.
+   */
+  altgr?: { code: Code; shift?: boolean };
 }
 
 export interface Keymap {
   source: string;
-  layers: Record<LayerName, KeyAction[]>;
+  layers: Record<ClavisLayer, KeyAction[]>;
 }
 
 /** Riferimento a un tasto fisico letto su un certo layer. */

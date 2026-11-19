@@ -24,7 +24,7 @@ tasks:
       - docker run -d --name clavis-trainer-local -p 8088:8080 -e TELEGRAM_FAKE=1 -e COOKIE_SECURE=0 -e PUBLIC_URL=http://localhost:8088 {{.IMAGE}}:latest
 
   e2e:
-    desc: Smoke test, account (bot finto) e profili contro l'immagine locale (porta 8088)
+    desc: Smoke test, account (bot finto) e profili, guida e layout contro l'immagine locale (porta 8088)
     deps: [docker:run]
     cmds:
       - sleep 2
@@ -32,6 +32,7 @@ tasks:
       - bun tests/e2e/account.ts http://localhost:8088/
       - bun tests/e2e/profiles.ts http://localhost:8088/
       - bun tests/e2e/guide.ts http://localhost:8088/
+      - bun tests/e2e/layout.ts http://localhost:8088/
 
   docker:publish:
     desc: Rilascio manuale su Docker Hub (sha-<commit>, latest e la versione se HEAD ha un tag vX.Y.Z)

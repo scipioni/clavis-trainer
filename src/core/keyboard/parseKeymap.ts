@@ -1,4 +1,4 @@
-import type { KeyAction, Keymap, LayerName, Modifier } from './types';
+import { CLAVIS_LAYERS, type ClavisLayer, type KeyAction, type Keymap, type Modifier } from './types';
 import type { Code } from './osmaps';
 
 /**
@@ -33,13 +33,38 @@ const MODS: Record<string, Modifier> = {
 
 const MOD_LABELS: Record<Modifier, string> = { shift: '⇧', ctrl: 'ctrl', alt: 'alt', gui: 'gui', altgr: 'AltGr' };
 
-function keycodeAction(code: string): Pick<KeyAction, 'code' | 'shift' | 'label' | 'holdMod'> {
+/** Keycode ZMK che non emettono testo → funzione (per la mappa di consultazione). */
+const KEY_FNS: Record<string, string> = {
+  LEFT: 'nav.left', RIGHT: 'nav.right', UP: 'nav.up', DOWN: 'nav.down',
+  HOME: 'nav.home', END: 'nav.end', PG_UP: 'nav.pgUp', PG_DN: 'nav.pgDn', INS: 'nav.ins',
+  C_PREV: 'media.prev', C_NEXT: 'media.next', C_VOL_UP: 'media.volUp', C_VOL_DN: 'media.volDn',
+  C_STOP: 'media.stop', C_PP: 'media.playPause', C_MUTE: 'media.mute',
+  PSCRN: 'fkey.pscrn', SLCK: 'fkey.slck', PAUSE_BREAK: 'fkey.pause', K_APP: 'fkey.menu',
+  'LC(X)': 'clip.cut', 'LC(C)': 'clip.copy', 'LC(V)': 'clip.paste', 'LC(Z)': 'clip.undo',
+};
+
+/** Macro e behavior di Miryoku/ZMK che non emettono testo → funzione. */
+const TOKEN_FNS: Record<string, string> = {
+  U_NA: 'none', U_NU: 'none', U_BOOT: 'sys.boot',
+  U_UND: 'clip.undo', U_CUT: 'clip.cut', U_CPY: 'clip.copy', U_PST: 'clip.paste', U_RDO: 'clip.redo',
+  U_BTN1: 'btn.1', U_BTN2: 'btn.2', U_BTN3: 'btn.3',
+  U_MS_L: 'mouse.left', U_MS_R: 'mouse.right', U_MS_U: 'mouse.up', U_MS_D: 'mouse.down',
+  U_WH_L: 'wheel.left', U_WH_R: 'wheel.right', U_WH_U: 'wheel.up', U_WH_D: 'wheel.down',
+  U_RGB_TOG: 'rgb.toggle', U_RGB_EFF: 'rgb.effect', U_RGB_HUI: 'rgb.hue', U_RGB_SAI: 'rgb.sat', U_RGB_BRI: 'rgb.bright',
+  U_EP_TOG: 'ep.toggle', '&u_out_tog': 'out.toggle', '&u_caps_word': 'caps.word',
+};
+
+function keycodeAction(code: string): Pick<KeyAction, 'code' | 'shift' | 'label' | 'holdMod' | 'fn'> {
   if (/^[A-Z]$/.test(code)) return { code: `Key${code}`, label: code.toLowerCase() };
   const mod = MODS[code];
   if (mod) return { holdMod: mod, label: MOD_LABELS[mod] };
   const k = KEYCODES[code];
   if (k) return { code: k[0], ...(k[1] ? { shift: true } : {}), label: LABELS[code] ?? '' };
-  return { label: LABELS[code] ?? code.toLowerCase() };
+  const f = /^F(\d{1,2})$/.exec(code);
+  if (f) return { label: '', fn: `fkey.${f[1]}` };
+  const fn = KEY_FNS[code];
+  if (fn) return { label: '', fn };
+  return { label: LABELS[code] ?? code.toLowerCase(), fn: 'unknown' };
 }
 
 /** Converte un token Miryoku/ZMK (es. `U_MTL(LSHFT, T)`) in un'azione. */
@@ -52,8 +77,32 @@ export function parseToken(raw: string): KeyAction {
   if (m) return { ...keycodeAction(m[2]), holdMod: MODS[m[1]] };
   m = /^U_LT[LR]?\(\s*U_([A-Z]+)\s*,\s*([A-Z0-9_]+)\s*\)$/.exec(t);
   if (m) return { ...keycodeAction(m[2]), holdLayer: m[1] };
-  // Tutto il resto (U_NA, U_BOOT, &u_..., &kp LC(X), RA(...), ...) non produce testo.
-  return { label: '' };
+  // AltGr + keycode (&kp RA(SQT)): fuori da `code`, la risoluzione non lo usa
+  m = /^&kp\s+RA\(\s*([A-Z0-9_]+)\s*\)$/.exec(t);
+  if (m && KEYCODES[m[1]]) {
+    const [code, shift] = KEYCODES[m[1]];
+    return { label: '', altgr: { code, ...(shift ? { shift: true } : {}) } };
+  }
+  m = /^&kp\s+(L[CSAG]\([A-Z0-9_]+\))$/.exec(t);
+  if (m && KEY_FNS[m[1]]) return { label: '', fn: KEY_FNS[m[1]] };
+  m = /^&u_bt_sel_(\d)$/.exec(t);
+  if (m) return { label: '', fn: `bt.${m[1]}` };
+  m = /^&u_to_U_([A-Z]+)$/.exec(t);
+  if (m) return { label: '', fn: `to.${m[1]}` };
+  const fn = TOKEN_FNS[t];
+  if (fn) return { label: '', fn };
+  return { label: '', fn: 'unknown' };
+}
+
+/** Token che la conversione non riconosce (per avvisare chi rigenera la keymap). */
+export function unknownTokens(src: string): string[] {
+  const out: string[] = [];
+  for (const name of CLAVIS_LAYERS) {
+    for (const tok of splitTopLevel(macroBody(src, `MIRYOKU_LAYER_${name}`))) {
+      if (parseToken(tok).fn === 'unknown') out.push(`${name}: ${tok}`);
+    }
+  }
+  return out;
 }
 
 /** Estrae il corpo della macro `#define NAME ...` attiva (non commentata). */
@@ -84,8 +133,8 @@ function splitTopLevel(s: string): string[] {
 }
 
 export function parseKeymap(src: string, source = 'custom_config.h'): Keymap {
-  const layers = {} as Record<LayerName, KeyAction[]>;
-  for (const name of ['BASE', 'NUM', 'SYM'] as LayerName[]) {
+  const layers = {} as Record<ClavisLayer, KeyAction[]>;
+  for (const name of CLAVIS_LAYERS) {
     const tokens = splitTopLevel(macroBody(src, `MIRYOKU_LAYER_${name}`));
     if (tokens.length !== 40) throw new Error(`layer ${name}: attese 40 posizioni, trovate ${tokens.length}`);
     layers[name] = tokens.map(parseToken);

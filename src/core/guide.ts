@@ -30,6 +30,8 @@ export interface AutoOpenState {
   sessionActive: boolean;
   /** Guida già aperta. */
   open: boolean;
+  /** Si sta guardando la mappa dei layer: chi arriva da un link vuole solo quella. */
+  onLayout: boolean;
   /** Versione per la tastiera del profilo attivo. */
   kind: GuideKind;
   seen: readonly GuideKind[];
@@ -37,7 +39,7 @@ export interface AutoOpenState {
 
 /** La guida della tastiera attiva va aperta da sola adesso? */
 export function shouldAutoOpen(s: AutoOpenState): boolean {
-  return s.ready && s.interrupted === 0 && !s.sessionActive && !s.open && !s.seen.includes(s.kind);
+  return s.ready && s.interrupted === 0 && !s.sessionActive && !s.open && !s.onLayout && !s.seen.includes(s.kind);
 }
 
 /** Le versioni viste dopo aver chiuso una guida in cui si sono mostrate `shown`. */

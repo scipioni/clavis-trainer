@@ -26,11 +26,12 @@ pollice); per la tastiera classica la diteggiatura standard delle dieci dita.
 - **THEN** il modello risponde indice sinistro, indice destro, indice sinistro, indice sinistro, indice destro e pollice
 
 ### Requirement: Keymap ricavata dal firmware
-Per la tastiera clavis il sistema SHALL usare come fonte dei layer BASE, NUM e
-SYM la keymap ZMK di `scipioni/clavis`, convertita in dati versionati che
-registrano per ogni posizione il keycode e il comportamento in pressione;
+Per la tastiera clavis il sistema SHALL usare come fonte di tutti i layer
+(BASE, NAV, MOUSE, MEDIA, SYM, NUM, FUN, BUTTON) la keymap ZMK di
+`scipioni/clavis`, convertita in dati versionati che registrano per ogni
+posizione il keycode, il comportamento in pressione o l'azione senza testo;
 con il layout QWERTY la base è quella QWERTY di Miryoku con gli stessi home row
-mod.
+mod. La risoluzione dei caratteri usa solo i layer BASE, NUM e SYM.
 
 #### Scenario: Rigenerazione dalla keymap
 - **WHEN** si esegue la conversione sul file `custom_config.h` attuale
@@ -43,6 +44,14 @@ mod.
 #### Scenario: Base QWERTY
 - **WHEN** il profilo è clavis + US QWERTY
 - **THEN** la riga superiore del layer BASE è `q w e r t y u i o p` e i layer NUM e SYM restano quelli del firmware
+
+#### Scenario: Layer senza testo
+- **WHEN** si esegue la conversione sul file `custom_config.h` attuale
+- **THEN** i dati contengono 8 layer da 40 posizioni, e il layer NAV ha le frecce sinistra, giù, su, destra sulla riga base della mano destra
+
+#### Scenario: Risoluzione invariata
+- **WHEN** con il profilo clavis + Colemak-DH si risolve `7`, presente anche nel tastierino del layer MEDIA
+- **THEN** il risultato è un accordo sul layer NUM, come prima della conversione estesa
 
 ### Requirement: Risoluzione di un carattere in pressioni
 Per ogni carattere supportato dal profilo attivo il sistema SHALL fornire la

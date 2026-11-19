@@ -181,6 +181,492 @@
     "absent": true
    }
   ],
+  "NAV": [
+   {
+    "label": "",
+    "fn": "sys.boot"
+   },
+   {
+    "label": "",
+    "fn": "to.TAP"
+   },
+   {
+    "label": "",
+    "fn": "to.EXTRA"
+   },
+   {
+    "label": "",
+    "fn": "to.BASE"
+   },
+   {
+    "label": "",
+    "fn": "none"
+   },
+   {
+    "label": "",
+    "fn": "clip.redo"
+   },
+   {
+    "label": "",
+    "fn": "clip.paste"
+   },
+   {
+    "label": "",
+    "fn": "clip.copy"
+   },
+   {
+    "label": "",
+    "fn": "clip.cut"
+   },
+   {
+    "label": "",
+    "fn": "clip.undo"
+   },
+   {
+    "holdMod": "gui",
+    "label": "gui"
+   },
+   {
+    "holdMod": "alt",
+    "label": "alt"
+   },
+   {
+    "holdMod": "ctrl",
+    "label": "ctrl"
+   },
+   {
+    "holdMod": "shift",
+    "label": "⇧"
+   },
+   {
+    "label": "",
+    "fn": "none"
+   },
+   {
+    "label": "",
+    "fn": "caps.word"
+   },
+   {
+    "label": "",
+    "fn": "nav.left"
+   },
+   {
+    "label": "",
+    "fn": "nav.down"
+   },
+   {
+    "label": "",
+    "fn": "nav.up"
+   },
+   {
+    "label": "",
+    "fn": "nav.right"
+   },
+   {
+    "label": "",
+    "fn": "none"
+   },
+   {
+    "label": "",
+    "fn": "clip.cut"
+   },
+   {
+    "label": "",
+    "fn": "clip.copy"
+   },
+   {
+    "label": "",
+    "fn": "clip.paste"
+   },
+   {
+    "label": "",
+    "fn": "none"
+   },
+   {
+    "label": "",
+    "fn": "nav.ins"
+   },
+   {
+    "label": "",
+    "fn": "nav.home"
+   },
+   {
+    "label": "",
+    "fn": "nav.pgDn"
+   },
+   {
+    "label": "",
+    "fn": "nav.pgUp"
+   },
+   {
+    "label": "",
+    "fn": "nav.end"
+   },
+   {
+    "label": "",
+    "absent": true
+   },
+   {
+    "label": "",
+    "absent": true
+   },
+   {
+    "label": "",
+    "fn": "none"
+   },
+   {
+    "label": "",
+    "fn": "none"
+   },
+   {
+    "label": "",
+    "fn": "none"
+   },
+   {
+    "code": "Enter",
+    "label": "⏎"
+   },
+   {
+    "code": "Backspace",
+    "label": "⌫"
+   },
+   {
+    "code": "Delete",
+    "label": "⌦"
+   },
+   {
+    "label": "",
+    "absent": true
+   },
+   {
+    "label": "",
+    "absent": true
+   }
+  ],
+  "MOUSE": [
+   {
+    "label": "",
+    "fn": "sys.boot"
+   },
+   {
+    "label": "",
+    "fn": "to.TAP"
+   },
+   {
+    "label": "",
+    "fn": "to.EXTRA"
+   },
+   {
+    "label": "",
+    "fn": "to.BASE"
+   },
+   {
+    "label": "",
+    "fn": "none"
+   },
+   {
+    "label": "",
+    "fn": "clip.redo"
+   },
+   {
+    "label": "",
+    "fn": "clip.paste"
+   },
+   {
+    "label": "",
+    "fn": "clip.copy"
+   },
+   {
+    "label": "",
+    "fn": "clip.cut"
+   },
+   {
+    "label": "",
+    "fn": "clip.undo"
+   },
+   {
+    "holdMod": "gui",
+    "label": "gui"
+   },
+   {
+    "holdMod": "alt",
+    "label": "alt"
+   },
+   {
+    "holdMod": "ctrl",
+    "label": "ctrl"
+   },
+   {
+    "holdMod": "shift",
+    "label": "⇧"
+   },
+   {
+    "label": "",
+    "fn": "none"
+   },
+   {
+    "label": "",
+    "fn": "none"
+   },
+   {
+    "label": "",
+    "fn": "mouse.left"
+   },
+   {
+    "label": "",
+    "fn": "mouse.down"
+   },
+   {
+    "label": "",
+    "fn": "mouse.up"
+   },
+   {
+    "label": "",
+    "fn": "mouse.right"
+   },
+   {
+    "label": "",
+    "fn": "none"
+   },
+   {
+    "holdMod": "altgr",
+    "label": "AltGr"
+   },
+   {
+    "label": "",
+    "fn": "to.SYM"
+   },
+   {
+    "label": "",
+    "fn": "to.MOUSE"
+   },
+   {
+    "label": "",
+    "fn": "none"
+   },
+   {
+    "label": "",
+    "fn": "none"
+   },
+   {
+    "label": "",
+    "fn": "wheel.left"
+   },
+   {
+    "label": "",
+    "fn": "wheel.down"
+   },
+   {
+    "label": "",
+    "fn": "wheel.up"
+   },
+   {
+    "label": "",
+    "fn": "wheel.right"
+   },
+   {
+    "label": "",
+    "absent": true
+   },
+   {
+    "label": "",
+    "absent": true
+   },
+   {
+    "label": "",
+    "fn": "none"
+   },
+   {
+    "label": "",
+    "fn": "none"
+   },
+   {
+    "label": "",
+    "fn": "none"
+   },
+   {
+    "label": "",
+    "fn": "btn.2"
+   },
+   {
+    "label": "",
+    "fn": "btn.1"
+   },
+   {
+    "label": "",
+    "fn": "btn.3"
+   },
+   {
+    "label": "",
+    "absent": true
+   },
+   {
+    "label": "",
+    "absent": true
+   }
+  ],
+  "MEDIA": [
+   {
+    "label": "",
+    "fn": "none"
+   },
+   {
+    "code": "Numpad7",
+    "label": ""
+   },
+   {
+    "code": "Numpad8",
+    "label": ""
+   },
+   {
+    "code": "Numpad9",
+    "label": ""
+   },
+   {
+    "code": "NumpadSubtract",
+    "label": ""
+   },
+   {
+    "label": "",
+    "fn": "rgb.toggle"
+   },
+   {
+    "label": "",
+    "fn": "rgb.effect"
+   },
+   {
+    "label": "",
+    "fn": "rgb.hue"
+   },
+   {
+    "label": "",
+    "fn": "rgb.sat"
+   },
+   {
+    "label": "",
+    "fn": "rgb.bright"
+   },
+   {
+    "label": "",
+    "fn": "none"
+   },
+   {
+    "code": "Numpad4",
+    "label": ""
+   },
+   {
+    "code": "Numpad5",
+    "label": ""
+   },
+   {
+    "code": "Numpad6",
+    "label": ""
+   },
+   {
+    "code": "NumpadAdd",
+    "label": ""
+   },
+   {
+    "label": "",
+    "fn": "ep.toggle"
+   },
+   {
+    "label": "",
+    "fn": "media.prev"
+   },
+   {
+    "label": "",
+    "fn": "media.volDn"
+   },
+   {
+    "label": "",
+    "fn": "media.volUp"
+   },
+   {
+    "label": "",
+    "fn": "media.next"
+   },
+   {
+    "code": "Numpad0",
+    "label": ""
+   },
+   {
+    "code": "Numpad1",
+    "label": ""
+   },
+   {
+    "code": "Numpad2",
+    "label": ""
+   },
+   {
+    "code": "Numpad3",
+    "label": ""
+   },
+   {
+    "code": "NumpadDecimal",
+    "label": ""
+   },
+   {
+    "label": "",
+    "fn": "out.toggle"
+   },
+   {
+    "label": "",
+    "fn": "bt.0"
+   },
+   {
+    "label": "",
+    "fn": "bt.1"
+   },
+   {
+    "label": "",
+    "fn": "bt.2"
+   },
+   {
+    "label": "",
+    "fn": "bt.3"
+   },
+   {
+    "label": "",
+    "absent": true
+   },
+   {
+    "label": "",
+    "absent": true
+   },
+   {
+    "label": "",
+    "fn": "none"
+   },
+   {
+    "label": "",
+    "fn": "none"
+   },
+   {
+    "label": "",
+    "fn": "none"
+   },
+   {
+    "label": "",
+    "fn": "media.stop"
+   },
+   {
+    "label": "",
+    "fn": "media.playPause"
+   },
+   {
+    "label": "",
+    "fn": "media.mute"
+   },
+   {
+    "label": "",
+    "absent": true
+   },
+   {
+    "label": "",
+    "absent": true
+   }
+  ],
   "NUM": [
    {
     "code": "BracketLeft",
@@ -203,19 +689,24 @@
     "label": ""
    },
    {
-    "label": ""
+    "label": "",
+    "fn": "none"
    },
    {
-    "label": ""
+    "label": "",
+    "fn": "to.BASE"
    },
    {
-    "label": ""
+    "label": "",
+    "fn": "to.EXTRA"
    },
    {
-    "label": ""
+    "label": "",
+    "fn": "to.TAP"
    },
    {
-    "label": ""
+    "label": "",
+    "fn": "sys.boot"
    },
    {
     "code": "Quote",
@@ -238,7 +729,8 @@
     "label": ""
    },
    {
-    "label": ""
+    "label": "",
+    "fn": "none"
    },
    {
     "holdMod": "shift",
@@ -277,20 +769,29 @@
     "label": ""
    },
    {
-    "label": ""
+    "label": "",
+    "fn": "none"
    },
    {
-    "label": ""
+    "label": "",
+    "altgr": {
+     "code": "Quote"
+    }
    },
    {
-    "label": ""
+    "label": "",
+    "altgr": {
+     "code": "Quote",
+     "shift": true
+    }
    },
    {
     "holdMod": "altgr",
     "label": "AltGr"
    },
    {
-    "label": ""
+    "label": "",
+    "fn": "none"
    },
    {
     "label": "",
@@ -313,13 +814,16 @@
     "label": ""
    },
    {
-    "label": ""
+    "label": "",
+    "fn": "none"
    },
    {
-    "label": ""
+    "label": "",
+    "fn": "none"
    },
    {
-    "label": ""
+    "label": "",
+    "fn": "none"
    },
    {
     "label": "",
@@ -357,19 +861,24 @@
     "label": ""
    },
    {
-    "label": ""
+    "label": "",
+    "fn": "none"
    },
    {
-    "label": ""
+    "label": "",
+    "fn": "to.BASE"
    },
    {
-    "label": ""
+    "label": "",
+    "fn": "to.EXTRA"
    },
    {
-    "label": ""
+    "label": "",
+    "fn": "to.TAP"
    },
    {
-    "label": ""
+    "label": "",
+    "fn": "sys.boot"
    },
    {
     "code": "Semicolon",
@@ -397,7 +906,8 @@
     "label": ""
    },
    {
-    "label": ""
+    "label": "",
+    "fn": "none"
    },
    {
     "holdMod": "shift",
@@ -441,20 +951,24 @@
     "label": ""
    },
    {
-    "label": ""
+    "label": "",
+    "fn": "none"
    },
    {
-    "label": ""
+    "label": "",
+    "fn": "to.SYM"
    },
    {
-    "label": ""
+    "label": "",
+    "fn": "to.MOUSE"
    },
    {
     "holdMod": "altgr",
     "label": "AltGr"
    },
    {
-    "label": ""
+    "label": "",
+    "fn": "none"
    },
    {
     "label": "",
@@ -480,13 +994,340 @@
     "label": ""
    },
    {
-    "label": ""
+    "label": "",
+    "fn": "none"
    },
    {
-    "label": ""
+    "label": "",
+    "fn": "none"
    },
    {
-    "label": ""
+    "label": "",
+    "fn": "none"
+   },
+   {
+    "label": "",
+    "absent": true
+   },
+   {
+    "label": "",
+    "absent": true
+   }
+  ],
+  "FUN": [
+   {
+    "label": "",
+    "fn": "fkey.12"
+   },
+   {
+    "label": "",
+    "fn": "fkey.7"
+   },
+   {
+    "label": "",
+    "fn": "fkey.8"
+   },
+   {
+    "label": "",
+    "fn": "fkey.9"
+   },
+   {
+    "label": "",
+    "fn": "fkey.pscrn"
+   },
+   {
+    "label": "",
+    "fn": "none"
+   },
+   {
+    "label": "",
+    "fn": "to.BASE"
+   },
+   {
+    "label": "",
+    "fn": "to.EXTRA"
+   },
+   {
+    "label": "",
+    "fn": "to.TAP"
+   },
+   {
+    "label": "",
+    "fn": "sys.boot"
+   },
+   {
+    "label": "",
+    "fn": "fkey.11"
+   },
+   {
+    "label": "",
+    "fn": "fkey.4"
+   },
+   {
+    "label": "",
+    "fn": "fkey.5"
+   },
+   {
+    "label": "",
+    "fn": "fkey.6"
+   },
+   {
+    "label": "",
+    "fn": "fkey.slck"
+   },
+   {
+    "label": "",
+    "fn": "none"
+   },
+   {
+    "holdMod": "shift",
+    "label": "⇧"
+   },
+   {
+    "holdMod": "ctrl",
+    "label": "ctrl"
+   },
+   {
+    "holdMod": "alt",
+    "label": "alt"
+   },
+   {
+    "holdMod": "gui",
+    "label": "gui"
+   },
+   {
+    "label": "",
+    "fn": "fkey.10"
+   },
+   {
+    "label": "",
+    "fn": "fkey.1"
+   },
+   {
+    "label": "",
+    "fn": "fkey.2"
+   },
+   {
+    "label": "",
+    "fn": "fkey.3"
+   },
+   {
+    "label": "",
+    "fn": "fkey.pause"
+   },
+   {
+    "label": "",
+    "fn": "none"
+   },
+   {
+    "label": "",
+    "fn": "to.FUN"
+   },
+   {
+    "label": "",
+    "fn": "to.MEDIA"
+   },
+   {
+    "holdMod": "altgr",
+    "label": "AltGr"
+   },
+   {
+    "label": "",
+    "fn": "none"
+   },
+   {
+    "label": "",
+    "absent": true
+   },
+   {
+    "label": "",
+    "absent": true
+   },
+   {
+    "label": "",
+    "fn": "fkey.menu"
+   },
+   {
+    "code": "Space",
+    "label": "␣"
+   },
+   {
+    "code": "Tab",
+    "label": "⇥"
+   },
+   {
+    "label": "",
+    "fn": "none"
+   },
+   {
+    "label": "",
+    "fn": "none"
+   },
+   {
+    "label": "",
+    "fn": "none"
+   },
+   {
+    "label": "",
+    "absent": true
+   },
+   {
+    "label": "",
+    "absent": true
+   }
+  ],
+  "BUTTON": [
+   {
+    "label": "",
+    "fn": "clip.undo"
+   },
+   {
+    "label": "",
+    "fn": "clip.cut"
+   },
+   {
+    "label": "",
+    "fn": "clip.copy"
+   },
+   {
+    "label": "",
+    "fn": "clip.paste"
+   },
+   {
+    "label": "",
+    "fn": "clip.redo"
+   },
+   {
+    "label": "",
+    "fn": "clip.redo"
+   },
+   {
+    "label": "",
+    "fn": "clip.paste"
+   },
+   {
+    "label": "",
+    "fn": "clip.copy"
+   },
+   {
+    "label": "",
+    "fn": "clip.cut"
+   },
+   {
+    "label": "",
+    "fn": "clip.undo"
+   },
+   {
+    "holdMod": "gui",
+    "label": "gui"
+   },
+   {
+    "holdMod": "alt",
+    "label": "alt"
+   },
+   {
+    "holdMod": "ctrl",
+    "label": "ctrl"
+   },
+   {
+    "holdMod": "shift",
+    "label": "⇧"
+   },
+   {
+    "label": "",
+    "fn": "none"
+   },
+   {
+    "label": "",
+    "fn": "none"
+   },
+   {
+    "holdMod": "shift",
+    "label": "⇧"
+   },
+   {
+    "holdMod": "ctrl",
+    "label": "ctrl"
+   },
+   {
+    "holdMod": "alt",
+    "label": "alt"
+   },
+   {
+    "holdMod": "gui",
+    "label": "gui"
+   },
+   {
+    "label": "",
+    "fn": "clip.undo"
+   },
+   {
+    "label": "",
+    "fn": "clip.cut"
+   },
+   {
+    "label": "",
+    "fn": "clip.copy"
+   },
+   {
+    "label": "",
+    "fn": "clip.paste"
+   },
+   {
+    "label": "",
+    "fn": "clip.redo"
+   },
+   {
+    "label": "",
+    "fn": "clip.redo"
+   },
+   {
+    "label": "",
+    "fn": "clip.paste"
+   },
+   {
+    "label": "",
+    "fn": "clip.copy"
+   },
+   {
+    "label": "",
+    "fn": "clip.cut"
+   },
+   {
+    "label": "",
+    "fn": "clip.undo"
+   },
+   {
+    "label": "",
+    "absent": true
+   },
+   {
+    "label": "",
+    "absent": true
+   },
+   {
+    "label": "",
+    "fn": "btn.3"
+   },
+   {
+    "label": "",
+    "fn": "btn.1"
+   },
+   {
+    "label": "",
+    "fn": "btn.2"
+   },
+   {
+    "label": "",
+    "fn": "btn.2"
+   },
+   {
+    "label": "",
+    "fn": "btn.1"
+   },
+   {
+    "label": "",
+    "fn": "btn.3"
    },
    {
     "label": "",

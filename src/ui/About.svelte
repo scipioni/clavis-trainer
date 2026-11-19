@@ -13,6 +13,7 @@
   <h3>{t('about.how')}</h3>
   <ul>
     <li>{t('about.guide')}</li>
+    <li>{t('about.layout')}</li>
     <li>{t('about.how1')}</li>
     <li>{t('about.how2')}</li>
     <li>{t('about.how3')}</li>

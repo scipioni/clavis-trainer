@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { app, type View } from './app.svelte';
+  import { app, viewFromHash, type View } from './app.svelte';
   import Trainer from './Trainer.svelte';
   import Stats from './Stats.svelte';
   import Settings from './Settings.svelte';
@@ -8,12 +8,14 @@
   import AccountBadge from './AccountBadge.svelte';
   import LoginDialog from './LoginDialog.svelte';
   import Guide from './Guide.svelte';
+  import Layout from './Layout.svelte';
   import { fmtDate, i18n, t } from '../i18n/index.svelte';
 
   const TABS = $derived<{ id: View; label: string }[]>([
     { id: 'train', label: t('nav.train') },
     { id: 'stats', label: t('nav.stats') },
     { id: 'settings', label: t('nav.settings') },
+    { id: 'layout', label: t('nav.layout') },
     { id: 'about', label: t('nav.about') },
   ]);
 
@@ -23,7 +25,27 @@
   });
 
   onMount(() => {
+    // indirizzo `#layout`: link diretti e pulsanti Indietro/Avanti del browser
+    const fromAddress = () => {
+      const v = viewFromHash(location.hash);
+      if (v) app.view = v;
+      else if (app.view === 'layout') app.view = app.lastView;
+    };
+    addEventListener('hashchange', fromAddress);
+    addEventListener('popstate', fromAddress);
     void app.init();
+    return () => {
+      removeEventListener('hashchange', fromAddress);
+      removeEventListener('popstate', fromAddress);
+    };
+  });
+
+  // la vista Layout ha un indirizzo proprio; lasciandola si toglie `#layout` senza aggiungere voci alla cronologia
+  $effect(() => {
+    const v = app.view;
+    if (v !== 'layout') app.lastView = v;
+    if (v === 'layout' && location.hash !== '#layout') history.pushState(null, '', '#layout');
+    else if (v !== 'layout' && location.hash === '#layout') history.replaceState(null, '', location.pathname + location.search);
   });
 
   // guida al primo avvio e alla prima volta su un tipo di tastiera: aspetta
@@ -49,14 +71,17 @@
 {#if app.loginOpen}<LoginDialog />{/if}
 {#if app.guideOpen}<Guide />{/if}
 
-<main>
+<main class:wide={app.view === 'layout'}>
   {#if app.outdated}
     <div class="banner" role="alert">
       {t('app.outdated')}
       <button class="primary" onclick={() => location.reload()}>{t('app.reload')}</button>
     </div>
   {/if}
-  {#if app.error}
+  {#if app.view === 'layout'}
+    <!-- la mappa dei layer non dipende dal database -->
+    <Layout />
+  {:else if app.error}
     <p class="error">{t('app.startError', app.error)}</p>
   {:else if !app.ready}
     {#if app.dbBlocked}
@@ -107,6 +132,14 @@
     --finger-index: #1c64d4;
     --finger-thumb: #7c4dcc;
     --finger-fg: #ffffff;
+    --cat-char: #ffffff;
+    --cat-mod: #e5dbff;
+    --cat-layer: #ffe8a3;
+    --cat-nav: #d0e7ff;
+    --cat-media: #ffd6e7;
+    --cat-mouse: #d3f9d8;
+    --cat-fkey: #c5f6fa;
+    --cat-sys: #ffd8cc;
     --mono: ui-monospace, 'JetBrains Mono', 'Fira Code', Menlo, Consolas, monospace;
   }
   @media (prefers-color-scheme: dark) {
@@ -131,6 +164,38 @@
       --finger-index: #74a7f7;
       --finger-thumb: #b197fc;
       --finger-fg: #0f1114;
+      --cat-char: #262a2f;
+      --cat-mod: #3b2f63;
+      --cat-layer: #5a4812;
+      --cat-nav: #1d3a5c;
+      --cat-media: #5a2340;
+      --cat-mouse: #1e4a2a;
+      --cat-fkey: #144a52;
+      --cat-sys: #5c2a1f;
+    }
+  }
+  /* in stampa sempre la palette chiara, anche con il tema scuro */
+  @media print {
+    :global(:root) {
+      color-scheme: light;
+      --bg: #ffffff;
+      --panel: #ffffff;
+      --fg: #1d1f21;
+      --muted: #5c6068;
+      --border: #c9c6bd;
+      --accent: #2f6fdb;
+      --accent-fg: #ffffff;
+      --hold: #c2410c;
+      --key-bg: #ffffff;
+      --key-border: #9c998f;
+      --cat-char: #ffffff;
+      --cat-mod: #e5dbff;
+      --cat-layer: #ffe8a3;
+      --cat-nav: #d0e7ff;
+      --cat-media: #ffd6e7;
+      --cat-mouse: #d3f9d8;
+      --cat-fkey: #c5f6fa;
+      --cat-sys: #ffd8cc;
     }
   }
   :global(body) {
@@ -216,6 +281,21 @@
     max-width: 960px;
     margin: 0 auto;
     padding: 1.5rem 1.25rem 3rem;
+  }
+  main.wide {
+    max-width: 1500px;
+  }
+  @media print {
+    header,
+    .banner {
+      display: none;
+    }
+    main,
+    main.wide {
+      max-width: none;
+      margin: 0;
+      padding: 0;
+    }
   }
   .banner {
     display: flex;

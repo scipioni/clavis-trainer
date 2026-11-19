@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
-import { parseKeymap } from './parseKeymap';
+import { parseKeymap, parseToken, unknownTokens } from './parseKeymap';
 import { Resolver } from './resolver';
 import { keyGeometry } from './geometry';
 import { clavisBoard } from './boards';
@@ -63,6 +63,59 @@ describe('keymap ricavata dal firmware', () => {
     const top = r.board.actions.BASE!.slice(0, 10).map((a) => US.keys[a.code!]![0]).join(' ');
     expect(top).toBe('q w e r t y u i o p');
     expect(r.board.actions.NUM).toBe(boardFor(CLAVIS).actions.NUM);
+  });
+});
+
+describe('keymap: tutti i layer e le azioni senza testo', () => {
+  const fns = (layer: keyof typeof keymap.layers, from: number, to: number) =>
+    keymap.layers[layer].slice(from, to).map((a) => a.fn ?? a.code);
+
+  test('8 layer da 40 posizioni, nessun token sconosciuto', () => {
+    expect(Object.keys(keymap.layers)).toEqual(['BASE', 'NAV', 'MOUSE', 'MEDIA', 'NUM', 'SYM', 'FUN', 'BUTTON']);
+    for (const l of Object.values(keymap.layers)) expect(l).toHaveLength(40);
+    expect(unknownTokens(fixture)).toEqual([]);
+    expect(Object.values(keymap.layers).flat().filter((a) => a.fn === 'unknown')).toEqual([]);
+  });
+
+  test('NAV: frecce sulla riga base destra, Ctrl+X = Taglia', () => {
+    expect(fns('NAV', 16, 20)).toEqual(['nav.left', 'nav.down', 'nav.up', 'nav.right']);
+    expect(fns('NAV', 21, 24)).toEqual(['clip.cut', 'clip.copy', 'clip.paste']);
+    expect(fns('NAV', 5, 10)).toEqual(['clip.redo', 'clip.paste', 'clip.copy', 'clip.cut', 'clip.undo']);
+  });
+
+  test('MEDIA: tastierino a sinistra, volume e Bluetooth a destra', () => {
+    expect(fns('MEDIA', 1, 4)).toEqual(['Numpad7', 'Numpad8', 'Numpad9']);
+    expect(fns('MEDIA', 20, 24)).toEqual(['Numpad0', 'Numpad1', 'Numpad2', 'Numpad3']);
+    expect(fns('MEDIA', 16, 20)).toEqual(['media.prev', 'media.volDn', 'media.volUp', 'media.next']);
+    expect(fns('MEDIA', 25, 30)).toEqual(['out.toggle', 'bt.0', 'bt.1', 'bt.2', 'bt.3']);
+    expect(keymap.layers.MEDIA[0].fn).toBe('none');
+  });
+
+  test('altri layer: F-keys, mouse, clic, cambio layer, boot', () => {
+    expect(fns('FUN', 0, 4)).toEqual(['fkey.12', 'fkey.7', 'fkey.8', 'fkey.9']);
+    expect(fns('MOUSE', 16, 20)).toEqual(['mouse.left', 'mouse.down', 'mouse.up', 'mouse.right']);
+    expect(fns('BUTTON', 32, 35)).toEqual(['btn.3', 'btn.1', 'btn.2']);
+    expect(fns('SYM', 6, 10)).toEqual(['to.BASE', 'to.EXTRA', 'to.TAP', 'sys.boot']);
+  });
+
+  test('AltGr + keycode fuori dalla risoluzione', () => {
+    expect(keymap.layers.NUM[26]).toEqual({ label: '', altgr: { code: 'Quote' } });
+    expect(keymap.layers.NUM[27]).toEqual({ label: '', altgr: { code: 'Quote', shift: true } });
+    expect(keymap.layers.NUM[26].code).toBeUndefined();
+  });
+
+  test('token inventato: sconosciuto, senza rompere la conversione', () => {
+    expect(parseToken('&u_teleport')).toEqual({ label: '', fn: 'unknown' });
+    expect(parseToken('&kp WARP_DRIVE').fn).toBe('unknown');
+    const broken = fixture.replace('&kp C_MUTE', '&u_teleport');
+    expect(unknownTokens(broken)).toEqual(['MEDIA: &u_teleport']);
+    expect(parseKeymap(broken).layers.MEDIA[37].fn).toBe('unknown');
+  });
+
+  test('risoluzione invariata: 7 sul layer NUM, non sul tastierino di MEDIA', () => {
+    const r = resolver.resolve('7')!;
+    expect(r.strokes).toHaveLength(1);
+    expect(r.strokes[0].layer).toBe('NUM');
   });
 });
 

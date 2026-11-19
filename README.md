@@ -23,6 +23,12 @@ and makes your history follow you across devices.
   standard ANSI/ISO keyboards) drawn with your layout. It opens by itself the
   first time you use each kind of keyboard and is always available from
   **Guide** in the menu.
+- **Layout map**: all eight layers of the clavis firmware on one page
+  (<https://clavis.mywire.org/#layout>, or **Layout** in the menu), with the
+  characters your operating system actually produces (US or Italian) on the
+  Colemak-DH or QWERTY base, colour-coded keys, the key to hold for each layer
+  and a legend. **Print / PDF** lays it out on one landscape A4 or A3 sheet: in
+  the print dialog choose "Save as PDF" and turn off headers and footers.
 - **Keyboard guide**: shows which key to tap, which key to hold (Shift on the
   opposite home row mod, layer keys) and the dead key sequence for accented
   letters.
@@ -91,8 +97,10 @@ all environment variables.
 
 The keyboard model is generated from the ZMK keymap in
 [scipioni/clavis](https://github.com/scipioni/clavis)
-(`firmware/zmk-timeless/config/custom_config.h`, macros
-`MIRYOKU_LAYER_BASE/NUM/SYM`). The local checkout of that repository is
+(`firmware/zmk-timeless/config/custom_config.h`, the eight
+`MIRYOKU_LAYER_*` macros). Exercises only use BASE, NUM and SYM; the layout
+map shows all of them, with keys that type no text (navigation, clipboard,
+media, Bluetooth, mouse, F-keys, layer switches) labelled by meaning. The local checkout of that repository is
 `/lab/clavis`, next to this one, so a firmware change can be tried here before
 it is pushed. After a firmware change:
 
@@ -101,7 +109,9 @@ bun run gen:keymap                          # download from GitHub (main branch)
 bun run gen:keymap /lab/clavis/firmware/zmk-timeless/config/custom_config.h   # from the local checkout
 ```
 
-The script rewrites `src/core/keyboard/clavis.keymap.json`. Also update the test
+The script rewrites `src/core/keyboard/clavis.keymap.json` and prints a
+warning for each firmware token it does not recognise: such keys show `?` on
+the layout map, and a unit test fails until `parseKeymap.ts` learns them. Also update the test
 fixture (`tests/fixtures/custom_config.h`) with the same file, then run
 `bun run test`. Fingers are assigned by column (pinky, ring, middle, index for
 the two inner columns, thumb) in `src/core/keyboard/geometry.ts`; the US
@@ -166,6 +176,16 @@ motion. The other suites close the guide as soon as it covers the page
 
 ```sh
 bun tests/e2e/guide.ts            # against bun run preview on :4173
+```
+
+`tests/e2e/layout.ts` covers the layout map: direct link without the guide,
+layer contents and labels in both languages, base and operating system
+selectors, the profile preselection, panel order at 1280 and 400 px, browser
+back/forward, a blocked database, and printing: it saves one-page A4 and A3
+PDFs (with the dark theme emulated) and screenshots in `tests/e2e/out/`.
+
+```sh
+bun tests/e2e/layout.ts           # against bun run preview on :4173
 ```
 
 They do not replace testing with a real clavis: dead key composition and home

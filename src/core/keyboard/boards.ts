@@ -67,11 +67,21 @@ const MIRYOKU_QWERTY: Code[] = [
  * Miryoku: cambiano i keycode delle 30 posizioni alfanumeriche, restano home row
  * mod e tasti di layer. NUM e SYM restano quelli del firmware.
  */
+/** Base di clavis nel firmware (Colemak-DH) o QWERTY di Miryoku. */
+export type ClavisBase = 'colemakdh' | 'qwerty';
+
+/**
+ * Layer BASE con la base scelta: con QWERTY cambiano i keycode delle 30
+ * posizioni alfanumeriche, restano home row mod e tasti di layer.
+ */
+export function clavisBaseLayer(keymap: Keymap, base: ClavisBase): KeyAction[] {
+  return base === 'colemakdh'
+    ? keymap.layers.BASE
+    : keymap.layers.BASE.map((a, pos) => (pos < 30 ? { ...a, code: MIRYOKU_QWERTY[pos], shift: undefined, label: '' } : a));
+}
+
 export function clavisBoard(keymap: Keymap, layout: LayoutId): Board {
-  const base =
-    layout === 'colemakdh'
-      ? keymap.layers.BASE
-      : keymap.layers.BASE.map((a, pos) => (pos < 30 ? { ...a, code: MIRYOKU_QWERTY[pos], shift: undefined, label: '' } : a));
+  const base = clavisBaseLayer(keymap, layout === 'colemakdh' ? 'colemakdh' : 'qwerty');
   const keys = Array.from({ length: 40 }, (_, pos) => {
     const g = keyGeometry(pos);
     return { pos, hand: g.hand, finger: g.finger, row: g.row, inner: g.inner, present: g.present, ...clavisPlace(pos), w: 0.9, h: 0.9 };

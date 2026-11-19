@@ -34,13 +34,14 @@ describe('versione della guida', () => {
 });
 
 describe('apertura automatica', () => {
-  const base: AutoOpenState = { ready: true, interrupted: 0, sessionActive: false, open: false, kind: 'clavis', seen: [] };
+  const base: AutoOpenState = { ready: true, interrupted: 0, sessionActive: false, open: false, onLayout: false, kind: 'clavis', seen: [] };
   test.each<[string, Partial<AutoOpenState>, boolean]>([
     ['da aprire', {}, true],
     ['app non pronta', { ready: false }, false],
     ['sessione interrotta in sospeso', { interrupted: 1 }, false],
     ['sessione in corso', { sessionActive: true }, false],
     ['già aperta', { open: true }, false],
+    ['sulla mappa dei layer', { onLayout: true }, false],
     ['già vista', { seen: ['clavis'] }, false],
     ['vista solo l\'altra', { seen: ['classic'] }, true],
   ])('%s', (_, patch, expected) => {
