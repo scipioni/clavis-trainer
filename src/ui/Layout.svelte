@@ -69,7 +69,7 @@
     return keys.length ? t('ref.hold', keys.join(` ${t('ref.or')} `)) : '';
   }
 
-  const pageStyle = $derived(`<style>@page { size: ${paper} landscape; margin: 8mm; }</style>`);
+  const pageStyle = $derived(`<style>@page { size: ${paper} landscape; margin: 10mm; }</style>`);
   const site = typeof location === 'undefined' ? '' : `${location.host}${location.pathname}#layout`;
 </script>
 
